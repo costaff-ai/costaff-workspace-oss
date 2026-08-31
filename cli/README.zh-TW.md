@@ -1,148 +1,108 @@
 # costaff-workspace
 
+[![npm](https://img.shields.io/npm/v/costaff-workspace?style=for-the-badge)](https://www.npmjs.com/package/costaff-workspace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
 [English](README.md) · **繁體中文**
 
-把你在自己電腦上做好的文件,變成一條可以傳給別人的連結。
+**[CoStaff Workspace](https://workspace.costaffs.app) 的命令列工具。**
+把在本機做好的文件發佈出去,拿回一條可以傳的連結。換一台機器取回、修改、再發佈,
+連結始終不變。
 
 適用於用 [open-doc](https://github.com/simonliu-ai-product/open-doc)(文件)、
 open-slide(簡報)、open-sheet(試算表)做的專案。
-
----
-
-## 1. 安裝
-
-需要 [Node.js](https://nodejs.org) 20 以上。用 `node -v` 確認。
 
 ```bash
 npm i -g costaff-workspace
 ```
 
-確認裝好了:
+## 為什麼
 
-```bash
-costaff-workspace --help
+建置好的文件是一整包檔案,而把一整包檔案傳給別人,不等於把文件交給他。靜態託管解決了
+傳遞,卻丟掉了周邊的一切:誰可以讀、它叫什麼名字、對方看到的是哪一版,以及它是從什麼
+原始碼建出來的。
+
+`costaff-workspace push` 用一個指令補上這段落差。拿回來的是一個位址,不是一次部署。
+
+## 特色
+
+### 📤 一個指令,不用設定
+
+在專案資料夾裡執行。slug 取自資料夾名稱、種類取自 `package.json` 的相依套件、
+產物取自 `dist/`、標題取自套件描述。**每一個推斷都會印出來**,而推斷不出來的時候
+它會停下,不會憑空編一個。
+
+```
+guessed --slug q3-report  --kind deck  --source-dir .
 ```
 
-<details>
-<summary>如果顯示「找不到指令」</summary>
+### 🔗 改了內容,連結不變
 
-你的 shell 看不到 npm 放全域指令的地方。`npm prefix -g` 會印出那個資料夾,把它底下的
-`bin` 加進 `PATH`。如果你用 pnpm,跑一次 `pnpm setup` 就好。
-</details>
+位址在建置之前就決定,不是事後才配發的,而且逐一記在檔案上。一年後重新發佈同一個
+資料夾,所有拿著舊連結的人看到的就是新版本。
 
-## 2. 先建置你的專案
+### ↩️ 換台機器就能接手
 
-發佈送出去的是**建置後的檔案**,所以要先建置。
+推送會帶著原始碼。`costaff-workspace pull <token>` 會在任何機器上還你一個完整的
+專案——安裝、修改、發佈,同一條連結。沒有任何東西綁在最初發佈的那台電腦上。
+
+### 🔒 預設私人,由你決定開放
+
+剛發佈的檔案只有擁有者打得開。要讓誰讀,是在檔案管理員裡邀請,或把它改成公開連結。
+**光是把位址傳給別人並不夠。**
+
+### 📦 一份文件一個 bundle
+
+含多份文件的專案會逐份建置。另一種做法——共用一次建置——會讓你只傳一份文件給別人時,
+他就能取得其他每一份的資產。隔離是理由,多出來的建置次數是代價。
+
+## 開始使用
 
 ```bash
 cd my-doc
-pnpm install
-pnpm build
-```
-
-跑完應該會出現一個 `dist/` 資料夾。如果你的專案輸出到別的地方,記住那個名字,
-第 3 步會用到。
-
-## 3. 推上去
-
-```bash
+pnpm build                    # 發佈送出去的是建置後的檔案
 costaff-workspace push
 ```
 
-### 第一次會請你登入
+第一次推送會印出一條登入連結,驗證碼已經在網址裡。在瀏覽器按下同意,指令會自己繼續,
+之後這台機器就保持登入。
 
 ```
-  Sign in to CoStaff Workspace
-  open  https://workspace.costaffs.app/activate?code=WXYZ-1234
-  code  WXYZ-1234
+4 documents — one bundle each
+getting-started              → https://workspace.costaffs.app/dcuk0lmf875ctrgxfppa
+q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv0aet
 ```
 
-用瀏覽器打開那個網址。**驗證碼已經在網址裡**,所以你只要按同意。指令會自己等著,
-授權完就繼續。
+名稱、資料夾,以及每一份誰可以讀,都在
+[workspace.costaffs.app](https://workspace.costaffs.app) 管理。
 
-這台機器之後就記住登入了,不會再問。
+> 專案的原始碼會和建置產物一起上傳,那正是之後 `pull` 得以成立的原因。
+> `node_modules` 和點開頭的檔案永遠不會被收進去,所以 **`.env` 不會跟著走**。
+> `--no-source` 則只發佈建置後的檔案。
 
-### 然後它就發佈了
+## 指令
 
-```
-  4 documents — one bundle each
-  getting-started              → https://workspace.costaffs.app/dcuk0lmf875ctrgxfppa
-  q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv0aet
-  team-offsite                 → https://workspace.costaffs.app/pv0aet8fjq2ldk3nx7yr
-  budget-2027                  → https://workspace.costaffs.app/3nx7yrpv0aet8fjq2ldk
-```
-
-那些連結就是檔案本身。傳一條給別人,他就能讀。
-
-> 專案的原始碼也會一起上傳 —— 那正是你之後能在別台機器上取回來的原因。
-> `node_modules` 和點開頭的檔案永遠不會被收進去,**你的 `.env` 不會跟著走**。
-> 只想發佈建置後的檔案就用 `--no-source`。
-
-## 4. 管理你發佈的東西
-
-到 **<https://workspace.costaffs.app>** 改名字、分資料夾,以及決定每一份誰可以看。
-
-> **剛推上去的檔案是私人的。** 在檔案管理員裡設定之前,只有你打得開。
-> **光是把連結傳給別人是不夠的**——你要在那裡邀請他,或是把檔案改成公開連結。
-
----
-
-## 之後要再做的事
-
-**你改了內容。** 重新建置再推一次。**連結不會變**——你傳出去的那條會直接看到新版本。
-
-```bash
-pnpm build && costaff-workspace push
-```
-
-**你換了一台電腦。** 用 token(連結的最後一段)把專案取回來:
-
-```bash
-costaff-workspace pull dcuk0lmf875ctrgxfppa my-doc
-cd my-doc
-pnpm install
-```
-
-拿回來的是一個完整的專案。改完、建置、推上去,同一條連結就更新了。
-
-**你想在發佈前先確認。** 這會把東西打包好並回報要送出什麼,但不上傳,也不需要網路:
-
-```bash
-costaff-workspace push --dry-run
-```
-
----
-
-## 你通常一個參數都不用打
-
-在專案資料夾裡執行,`push` 會自己推斷,而且**每一個猜測都會印出來**:
-
-```
-  guessed --slug my-report  --kind deck  --source-dir .
-```
-
-| 它會猜 | 依據 |
+| | |
 | --- | --- |
-| 檔案的身分(`--slug`) | 資料夾的名字 |
-| 是文件、簡報還是試算表(`--kind`) | 你 `package.json` 裡的相依套件 |
-| 建置產物在哪(`--site-dir`) | `dist` |
-| 標題 | `package.json` 的 description,沒有就用 slug |
+| `costaff-workspace push` | 發佈這個資料夾 |
+| `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
+| `costaff-workspace login` | 讓這台機器登入 |
+| `costaff-workspace logout` | 忘掉這台機器的登入 |
 
-猜錯就只補那一個參數。**完全猜不出來的時候它會停下來說明,不會憑空編一個。**
+## 參數
 
-### 參數
+一般的專案一個都不需要。推斷錯了才補上那一個。
 
-| 參數 | 什麼時候用 |
+| | |
 | --- | --- |
-| `--title "第三季報告"` | 你想在檔案管理員裡顯示別的名字 |
-| `--slug q3-report` | 資料夾名字不是你要的身分 |
-| `--kind document\|deck\|workbook` | 它猜錯種類了 |
-| `--site-dir build` | 你的建置產物不在 `dist` |
-| `--dry-run` | 想先確認再送出 |
-| `--no-source` | 只想發佈建置後的檔案 |
+| `--title "第三季報告"` | 檔案管理員裡顯示的名稱 |
+| `--slug q3-report` | 檔案的身分,也決定重推會更新哪一份 |
+| `--kind document\|deck\|workbook` | 種類推斷錯誤時 |
+| `--site-dir build` | 建置產物不在 `dist` 時 |
+| `--dry-run` | 打包並回報;不上傳,也不需要網路 |
+| `--no-source` | 只發佈建置後的檔案,不帶原始碼 |
 
-`costaff-workspace push --help` 會列出全部。
-
+`costaff-workspace push --help` 會列出全部參數。
 
 ## 授權
 

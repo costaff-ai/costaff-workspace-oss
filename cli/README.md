@@ -1,156 +1,116 @@
 # costaff-workspace
 
+[![npm](https://img.shields.io/npm/v/costaff-workspace?style=for-the-badge)](https://www.npmjs.com/package/costaff-workspace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
 **English** · [繁體中文](README.zh-TW.md)
 
-Turn a document you built on your own machine into a link you can send someone.
+**The command-line tool for [CoStaff Workspace](https://workspace.costaffs.app).**
+Publish a document you built locally and get back a link you can send. Fetch it
+onto another machine, edit, publish again — the link never changes.
 
 Works with projects made using [open-doc](https://github.com/simonliu-ai-product/open-doc)
 (documents), open-slide (decks) and open-sheet (workbooks).
-
----
-
-## 1. Install it
-
-You need [Node.js](https://nodejs.org) 20 or newer. Check with `node -v`.
 
 ```bash
 npm i -g costaff-workspace
 ```
 
-Confirm it is there:
+## Why
 
-```bash
-costaff-workspace --help
+A built document is a folder of files, and sending someone a folder is not
+sending them a document. Static hosting solves the delivery and loses everything
+around it: who may read the file, what it is called, which version they are
+looking at, and the source it was built from.
+
+`costaff-workspace push` closes that gap in one command. What comes back is an
+address, not a deployment.
+
+## Highlights
+
+### 📤 One command, no configuration
+
+Run it in a project folder. The slug comes from the folder name, the kind from
+what `package.json` depends on, the bundle from `dist/`, the title from the
+package description. **Every guess is printed**, and a guess it cannot make stops
+the push rather than inventing something.
+
+```
+guessed --slug q3-report  --kind deck  --source-dir .
 ```
 
-<details>
-<summary>If the command is not found</summary>
+### 🔗 Links that survive edits
 
-Your shell cannot see where npm puts global commands. `npm prefix -g` prints
-that folder; add its `bin` to your `PATH`. With pnpm, run `pnpm setup` once.
-</details>
+The address is settled before the build rather than assigned afterwards, and it
+is remembered per file. Publish the same folder a year later and everyone holding
+the old link sees the new version.
 
-## 2. Build your project
+### ↩️ Editable from anywhere
 
-Publishing sends the **built** files, so build first.
+A push carries the source. `costaff-workspace pull <token>` hands back a complete
+project on any machine — install, edit, publish, same link. Nothing is tied to
+the computer that published it first.
+
+### 🔒 Private until you say otherwise
+
+A newly published file opens for its owner and nobody else. Readers are invited,
+or the file is made a public link, in the file manager. Sending someone the
+address is not enough on its own.
+
+### 📦 One bundle per document
+
+A project holding several documents is built once per document. The alternative —
+a single shared build — lets anyone sent one document reach every other
+document's assets. Isolation is the reason; the extra builds are the price.
+
+## Get started
 
 ```bash
 cd my-doc
-pnpm install
-pnpm build
-```
-
-You should now have a `dist/` folder. If your project builds somewhere else,
-remember the name — you will pass it in step 3.
-
-## 3. Push
-
-```bash
+pnpm build                    # publishing sends the built files
 costaff-workspace push
 ```
 
-### The first time, it asks you to sign in
+The first push prints a sign-in link with the code already in it. Approve it in a
+browser: the command continues on its own, and the machine stays signed in.
 
 ```
-  Sign in to CoStaff Workspace
-  open  https://workspace.costaffs.app/activate?code=WXYZ-1234
-  code  WXYZ-1234
+4 documents — one bundle each
+getting-started              → https://workspace.costaffs.app/dcuk0lmf875ctrgxfppa
+q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv0aet
 ```
 
-Open that address in a browser. **The code is already in the link**, so you only
-have to approve it. The command waits, then carries on by itself.
+Names, folders, and who may read each file are managed at
+[workspace.costaffs.app](https://workspace.costaffs.app).
 
-This machine stays signed in. You will not see this again.
+> The project's source is uploaded alongside the build, which is what makes
+> `pull` possible later. `node_modules` and dotfiles are never collected, so
+> **`.env` does not travel**. `--no-source` publishes the built files alone.
 
-### Then it publishes
+## Commands
 
-```
-  4 documents — one bundle each
-  getting-started              → https://workspace.costaffs.app/dcuk0lmf875ctrgxfppa
-  q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv0aet
-  team-offsite                 → https://workspace.costaffs.app/pv0aet8fjq2ldk3nx7yr
-  budget-2027                  → https://workspace.costaffs.app/3nx7yrpv0aet8fjq2ldk
-```
-
-Those links are the files. Send one to someone and they can read it.
-
-> Your project's source is uploaded too — that is what lets you fetch it back
-> later on another machine. `node_modules` and dotfiles are never collected, so
-> **your `.env` does not travel**. `--no-source` publishes the built files alone.
-
-## 4. Manage what you published
-
-Go to **<https://workspace.costaffs.app>** to rename files, put them in folders,
-and decide who may read each one.
-
-> **A newly pushed file is private.** Only you can open it until you say
-> otherwise in the file manager. Sending someone the link is not enough — you
-> invite them, or you turn the file into a public link, there.
-
----
-
-## Doing it again
-
-**You changed something.** Build and push again. **The link stays the same** —
-whoever you sent it to sees the new version.
-
-```bash
-pnpm build && costaff-workspace push
-```
-
-**You are on a different computer.** Fetch the project back with the token — the
-last part of the link:
-
-```bash
-costaff-workspace pull dcuk0lmf875ctrgxfppa my-doc
-cd my-doc
-pnpm install
-```
-
-What comes back is a complete project. Edit it, build it, push it, and the same
-link updates.
-
-**You want to check before publishing.** This packages everything and reports
-what it would send, without uploading and without needing a network:
-
-```bash
-costaff-workspace push --dry-run
-```
-
----
-
-## You usually pass no options at all
-
-Run in a project folder, `push` works out the rest and **prints every guess**:
-
-```
-  guessed --slug my-report  --kind deck  --source-dir .
-```
-
-| It guesses | From |
+| | |
 | --- | --- |
-| the file's identity (`--slug`) | the folder's name |
-| document, deck or workbook (`--kind`) | what your `package.json` depends on |
-| the built files (`--site-dir`) | `dist` |
-| the title | your `package.json` description, else the slug |
+| `costaff-workspace push` | publish this folder |
+| `costaff-workspace pull <token> [dir]` | fetch a published file's source |
+| `costaff-workspace login` | sign this machine in |
+| `costaff-workspace logout` | forget this machine's sign-in |
 
-If a guess is wrong, pass that one option. If it cannot guess at all it stops and
-says so, rather than inventing something.
+## Options
 
-### Options
+A normal project needs none of these. Pass one when a guess is wrong.
 
-| Option | Use it when |
+| | |
 | --- | --- |
-| `--title "Q3 report"` | you want a different name in the file manager |
-| `--slug q3-report` | the folder name is not the identity you want |
-| `--kind document\|deck\|workbook` | it guessed the wrong kind |
-| `--site-dir build` | your build output is not in `dist` |
-| `--dry-run` | you want to check before sending |
-| `--no-source` | you want to publish the built files alone |
+| `--title "Q3 report"` | the name shown in the file manager |
+| `--slug q3-report` | the file's identity, and what a re-push updates |
+| `--kind document\|deck\|workbook` | when the kind is guessed wrong |
+| `--site-dir build` | when the build output is not `dist` |
+| `--dry-run` | package and report; uploads nothing, needs no network |
+| `--no-source` | publish the built files without the source |
 
-`costaff-workspace push --help` lists all of them.
+`costaff-workspace push --help` lists every option.
 
-
-## Licence
+## License
 
 MIT

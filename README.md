@@ -1,39 +1,42 @@
 # costaff-workspace
 
+[![npm](https://img.shields.io/npm/v/costaff-workspace?style=for-the-badge)](https://www.npmjs.com/package/costaff-workspace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
 **English** · [繁體中文](README.zh-TW.md)
 
-The official command-line tool for [CoStaff Workspace](https://workspace.costaffs.app).
-
-## Using it
+**The command-line tool for [CoStaff Workspace](https://workspace.costaffs.app).**
+Publish a document you built locally and get back a link you can send. Fetch it
+onto another machine, edit, publish again — the link never changes.
 
 ```bash
 npm i -g costaff-workspace
 
-cd my-doc
-pnpm build
+cd my-doc && pnpm build
 costaff-workspace push
 ```
 
-**→ [Full guide](cli/README.md)** — installing, your first push, publishing
-again, editing from another machine, and what to do when something goes wrong.
+**→ [Documentation](cli/README.md)**
 
-## What is in here
+## Repo layout
 
-[`cli/`](cli) is the published package — `npm i -g costaff-workspace`.
+| | |
+| --- | --- |
+| [`cli/`](cli) | the published package |
 
-The service itself is not in this repository. What is here is the half that runs
-on your own machine.
+The service is not in this repository. What is here is the half that runs on your
+own machine.
 
-## Working on the tool
+## Development
 
 ```bash
 cd cli
 pnpm install
 pnpm test
-pnpm build          # compiles to dist/, which is what the package ships
-pnpm add -g ./cli   # try the result before publishing
+pnpm build            # compiles to dist/, which is what the package ships
+pnpm add -g ./cli     # install the local build to try it
 ```
 
-## Licence
+## License
 
 MIT
