@@ -2,37 +2,40 @@
 
 **English** · [繁體中文](README.zh-TW.md)
 
-The command-line client for [CoStaff Workspace](https://workspace.costaffs.app),
+The command-line tool for [CoStaff Workspace](https://workspace.costaffs.app),
 and the specification of the protocol it speaks.
+
+## Using it
 
 ```bash
 npm i -g costaff-workspace
 
 cd my-doc
+pnpm build
 costaff-workspace push
 ```
 
-`cli/` is the published package — see [its README](cli/README.md) for what the
-command does and every flag it takes. [`PROTOCOL.md`](PROTOCOL.md) is the wire
-contract: anyone can run their own receiver and point `--endpoint` at it.
+**→ [Full guide](cli/README.md)** — installing, your first push, publishing
+again, editing from another machine, and what to do when something goes wrong.
 
-The service itself is not in this repository. What is here is the half a user
-runs on their own machine, and the contract between the two.
+## What is in here
 
-## Working on it
+| | |
+| --- | --- |
+| [`cli/`](cli) | the published package — `npm i -g costaff-workspace` |
+| [`PROTOCOL.md`](PROTOCOL.md) | the wire contract, so anyone can run their own receiver |
+
+The service itself is not in this repository. What is here is the half that runs
+on your own machine, and the contract between the two.
+
+## Working on the tool
 
 ```bash
 cd cli
 pnpm install
 pnpm test
-pnpm build
-```
-
-`pnpm build` compiles to `dist/`, which is what the package ships. To try the
-result before publishing, install the folder itself:
-
-```bash
-pnpm add -g ./cli
+pnpm build          # compiles to dist/, which is what the package ships
+pnpm add -g ./cli   # try the result before publishing
 ```
 
 ## Licence

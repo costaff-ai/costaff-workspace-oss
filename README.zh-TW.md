@@ -2,33 +2,38 @@
 
 [English](README.md) · **繁體中文**
 
-[CoStaff Workspace](https://workspace.costaffs.app) 的命令列工具,以及它所使用的協定規格。
+[CoStaff Workspace](https://workspace.costaffs.app) 的命令列工具,以及它使用的協定規格。
+
+## 怎麼用
 
 ```bash
 npm i -g costaff-workspace
 
 cd my-doc
+pnpm build
 costaff-workspace push
 ```
 
-`cli/` 是發佈到 npm 的那個套件——指令做什麼、有哪些旗標,看[它的說明](cli/README.zh-TW.md)。
-[`PROTOCOL.md`](PROTOCOL.md) 是傳輸協定:任何人都可以架自己的 receiver,`--endpoint` 指過去就是。
+**→ [完整說明](cli/README.zh-TW.md)** —— 安裝、第一次推送、之後怎麼更新、
+換一台電腦怎麼接手,以及出問題時怎麼辦。
 
-服務本身不在這個 repo 裡。這裡放的是**使用者在自己機器上跑的那一半**,以及兩邊之間的契約。
+## 這裡有什麼
 
-## 開發
+| | |
+| --- | --- |
+| [`cli/`](cli) | 發佈出去的套件 —— `npm i -g costaff-workspace` |
+| [`PROTOCOL.md`](PROTOCOL.md) | 傳輸協定,任何人都可以照它架自己的 receiver |
+
+服務本身不在這個 repo 裡。這裡放的是**在你自己機器上跑的那一半**,以及兩邊之間的契約。
+
+## 開發這個工具
 
 ```bash
 cd cli
 pnpm install
 pnpm test
-pnpm build
-```
-
-`pnpm build` 會編到 `dist/`,那就是套件實際送出去的內容。發佈前想先試,直接裝這個資料夾:
-
-```bash
-pnpm add -g ./cli
+pnpm build          # 編到 dist/，那就是套件實際送出去的內容
+pnpm add -g ./cli   # 發佈前先試試看
 ```
 
 ## 授權

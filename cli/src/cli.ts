@@ -177,10 +177,15 @@ export async function runPush(argv: string[]): Promise<void> {
   const root = opts.sourceRoot ?? process.cwd();
   const items = opts.given.slug ? [] : await scanProject(root);
   if (items.length > 0) {
+    /* kindLabel, not label: label is the workspace shell's Chinese wording, and
+       every other line this command prints is English. */
     const by = new Map<string, number>();
-    for (const it of items) by.set(it.surface.label, (by.get(it.surface.label) ?? 0) + 1);
-    const shape = [...by].map(([label, n]) => `${n} ${label}`).join('、');
-    process.stdout.write(`  ${shape} —— 各自建置成獨立的 bundle\n`);
+    for (const it of items) {
+      const kind = it.surface.kindLabel.toLowerCase();
+      by.set(kind, (by.get(kind) ?? 0) + 1);
+    }
+    const shape = [...by].map(([kind, n]) => `${n} ${kind}${n === 1 ? '' : 's'}`).join(', ');
+    process.stdout.write(`  ${shape} — one bundle each\n`);
     await pushProject({
       root,
       endpoint: opts.endpoint,
