@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+
+# 推送狀態是本機的，不是原始碼：它記著 token —— 檔案的公開位址 —— 以及推去了哪裡。
+.costaff-workspace/
+.mcp-workspace/

@@ -1,0 +1,51 @@
+{
+  "name": "costaff-workspace",
+  "version": "0.1.0",
+  "description": "Publish documents, decks and workbooks to CoStaff Workspace, and pull their source back out",
+  "keywords": [
+    "costaff",
+    "open-doc",
+    "open-slide",
+    "open-sheet",
+    "publish",
+    "cli",
+    "documents"
+  ],
+  "license": "MIT",
+  "author": "Simon Liu",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonliu-ai-product/costaff-workspace-oss.git",
+    "directory": "cli"
+  },
+  "homepage": "https://github.com/simonliu-ai-product/costaff-workspace-oss#readme",
+  "bugs": {
+    "url": "https://github.com/simonliu-ai-product/costaff-workspace-oss/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "bin": {
+    "costaff-workspace": "dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepare": "pnpm build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "push": "tsx src/main.ts push"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.0"
+  }
+}
