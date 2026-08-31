@@ -1,5 +1,7 @@
 # costaff-workspace
 
+**English** · [繁體中文](README.zh-TW.md)
+
 The command-line client for [CoStaff Workspace](https://workspace.costaffs.app),
 and the specification of the protocol it speaks.
 

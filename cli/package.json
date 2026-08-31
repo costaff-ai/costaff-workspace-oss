@@ -1,6 +1,6 @@
 {
   "name": "costaff-workspace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Publish documents, decks and workbooks to CoStaff Workspace, and pull their source back out",
   "keywords": [
     "costaff",
@@ -15,12 +15,12 @@
   "author": "Simon Liu",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simonliu-ai-product/costaff-workspace-oss.git",
+    "url": "git+https://github.com/costaff-ai/costaff-workspace-oss.git",
     "directory": "cli"
   },
-  "homepage": "https://github.com/simonliu-ai-product/costaff-workspace-oss#readme",
+  "homepage": "https://github.com/costaff-ai/costaff-workspace-oss#readme",
   "bugs": {
-    "url": "https://github.com/simonliu-ai-product/costaff-workspace-oss/issues"
+    "url": "https://github.com/costaff-ai/costaff-workspace-oss/issues"
   },
   "engines": {
     "node": ">=20"
@@ -30,7 +30,8 @@
     "costaff-workspace": "dist/main.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.zh-TW.md"
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
