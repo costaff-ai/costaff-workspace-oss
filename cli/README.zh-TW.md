@@ -136,7 +136,6 @@ costaff-workspace push --dry-run
 | `--site-dir build` | 你的建置產物不在 `dist` |
 | `--dry-run` | 想先確認再送出 |
 | `--no-source` | 只想發佈建置後的檔案 |
-| `--endpoint https://…` | 你自己架了服務 |
 
 `costaff-workspace push --help` 會列出全部。
 
@@ -165,22 +164,9 @@ costaff-workspace push --dry-run
 | `cannot make a slug out of the folder name` | 資料夾名字裡沒有可以當身分的英數字——例如中文資料夾名。加上 `--slug my-report`。 |
 | `Sign in first — run with --login.` | 執行 `costaff-workspace login`。 |
 | `Sign-in code expired.` / `Sign-in timed out.` | 驗證碼只有幾分鐘有效。再推一次就會拿到新的。 |
-| `… is not a CoStaff Workspace endpoint` | `--endpoint` 的網址不對,或那台伺服器沒開。拿掉這個參數就會用預設的。 |
-| `… does not hand source back.` | 那個服務沒有提供 `pull`。 |
+| `… is not a CoStaff Workspace endpoint` | 連不上服務 —— 檢查一下網路再試一次。 |
 | `No file at that token.` | token 不對,或這份檔案不是你的、也沒有分享給你。 |
 
----
-
-## 自己架服務
-
-這個 CLI 沒有綁死在 workspace.costaffs.app,可以指到任何地方:
-
-```bash
-costaff-workspace push --endpoint https://your-host
-export COSTAFF_WORKSPACE_ENDPOINT=https://your-host    # 整個 shell 都指過去
-```
-
-[`PROTOCOL.md`](../PROTOCOL.md) 是實作 receiver 用的規格。
 
 ## 授權
 

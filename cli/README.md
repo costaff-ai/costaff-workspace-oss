@@ -143,7 +143,6 @@ says so, rather than inventing something.
 | `--site-dir build` | your build output is not in `dist` |
 | `--dry-run` | you want to check before sending |
 | `--no-source` | you want to publish the built files alone |
-| `--endpoint https://…` | you run your own service |
 
 `costaff-workspace push --help` lists all of them.
 
@@ -174,22 +173,9 @@ pushing it publishes it under your own account. The original is untouched.
 | `cannot make a slug out of the folder name` | The folder's name has no letters or digits usable as an identity — a folder named in Chinese, for example. Pass `--slug my-report`. |
 | `Sign in first — run with --login.` | Run `costaff-workspace login`. |
 | `Sign-in code expired.` / `Sign-in timed out.` | The code only lasts a few minutes. Just push again for a new one. |
-| `… is not a CoStaff Workspace endpoint` | The `--endpoint` address is wrong, or that server is down. Drop the option to use the default. |
-| `… does not hand source back.` | That service does not offer `pull`. |
+| `… is not a CoStaff Workspace endpoint` | The service could not be reached — check your connection, then try again. |
 | `No file at that token.` | Wrong token, or the file is not yours and was not shared with you. |
 
----
-
-## Running your own service
-
-The CLI is not tied to workspace.costaffs.app. Point it anywhere:
-
-```bash
-costaff-workspace push --endpoint https://your-host
-export COSTAFF_WORKSPACE_ENDPOINT=https://your-host    # for a whole shell
-```
-
-[`PROTOCOL.md`](../PROTOCOL.md) is the specification to build a receiver against.
 
 ## Licence
 

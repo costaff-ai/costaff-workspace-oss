@@ -2,7 +2,7 @@
 
 [English](README.md) · **繁體中文**
 
-[CoStaff Workspace](https://workspace.costaffs.app) 的命令列工具,以及它使用的協定規格。
+[CoStaff Workspace](https://workspace.costaffs.app) 的官方命令列工具。
 
 ## 怎麼用
 
@@ -19,12 +19,9 @@ costaff-workspace push
 
 ## 這裡有什麼
 
-| | |
-| --- | --- |
-| [`cli/`](cli) | 發佈出去的套件 —— `npm i -g costaff-workspace` |
-| [`PROTOCOL.md`](PROTOCOL.md) | 傳輸協定,任何人都可以照它架自己的 receiver |
+[`cli/`](cli) 就是發佈出去的套件 —— `npm i -g costaff-workspace`。
 
-服務本身不在這個 repo 裡。這裡放的是**在你自己機器上跑的那一半**,以及兩邊之間的契約。
+服務本身不在這個 repo 裡,這裡放的是**在你自己機器上跑的那一半**。
 
 ## 開發這個工具
 

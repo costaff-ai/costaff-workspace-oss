@@ -2,8 +2,7 @@
 
 **English** · [繁體中文](README.zh-TW.md)
 
-The command-line tool for [CoStaff Workspace](https://workspace.costaffs.app),
-and the specification of the protocol it speaks.
+The official command-line tool for [CoStaff Workspace](https://workspace.costaffs.app).
 
 ## Using it
 
@@ -20,13 +19,10 @@ again, editing from another machine, and what to do when something goes wrong.
 
 ## What is in here
 
-| | |
-| --- | --- |
-| [`cli/`](cli) | the published package — `npm i -g costaff-workspace` |
-| [`PROTOCOL.md`](PROTOCOL.md) | the wire contract, so anyone can run their own receiver |
+[`cli/`](cli) is the published package — `npm i -g costaff-workspace`.
 
 The service itself is not in this repository. What is here is the half that runs
-on your own machine, and the contract between the two.
+on your own machine.
 
 ## Working on the tool
 

@@ -10,10 +10,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { FileKind } from './protocol.ts';
 
-/**
- * 正式站。自架 receiver 的人用 --endpoint 或 COSTAFF_WORKSPACE_ENDPOINT 指過去；
- * 協定是公開規格，這裡只是把最常見的那一個變成不必打的那一個。
- */
+/** 正式站。--endpoint 和 COSTAFF_WORKSPACE_ENDPOINT 蓋得掉，開發時指向本機用。 */
 export const DEFAULT_ENDPOINT = 'https://workspace.costaffs.app';
 
 /** 伺服器認的 slug：小寫英數與連字號，開頭必須是英數，最長 63。 */

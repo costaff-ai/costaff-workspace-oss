@@ -1,10 +1,10 @@
 /**
  * The wire contract between the CLI and a receiver.
  *
- * Anyone may host a receiver — `--endpoint` points the CLI at it — so this file
- * is a public specification, not an implementation detail. Adding a required
- * field is a breaking change for every third-party receiver; bump
- * `PUSH_PROTOCOL` and keep reading the old shape when that happens.
+ * Fields are optional by default. A CLI that is already installed keeps talking
+ * to a receiver that has moved on, so adding a required field breaks every copy
+ * out there; bump `PUSH_PROTOCOL` and keep reading the old shape when an
+ * existing field has to change meaning.
  */
 
 export const PUSH_PROTOCOL = 1;
