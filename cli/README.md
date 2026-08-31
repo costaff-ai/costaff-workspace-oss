@@ -74,6 +74,10 @@ This machine stays signed in. You will not see this again.
 
 Those links are the files. Send one to someone and they can read it.
 
+> Your project's source is uploaded too — that is what lets you fetch it back
+> later on another machine. `node_modules` and dotfiles are never collected, so
+> **your `.env` does not travel**. `--no-source` publishes the built files alone.
+
 ## 4. Manage what you published
 
 Go to **<https://workspace.costaffs.app>** to rename files, put them in folders,
@@ -145,36 +149,6 @@ says so, rather than inventing something.
 | `--no-source` | you want to publish the built files alone |
 
 `costaff-workspace push --help` lists all of them.
-
----
-
-## Worth knowing
-
-**Your source goes up too, and that is on purpose.** It is what lets `pull` hand
-you a working project back later, on any machine. `node_modules` and dotfiles are
-never collected — **your `.env` does not travel**. `--no-source` opts out, and
-then nothing can be pulled back out of that file afterwards.
-
-**A project with several documents takes longer than one build.** Each document
-is built into a bundle of its own. It has to be: inside one shared build, anyone
-you send a single document to can reach all the others.
-
-**A file someone shared with you comes back as a copy.** It carries no link, so
-pushing it publishes it under your own account. The original is untouched.
-
----
-
-## When something goes wrong
-
-| It says | What it means, and what to do |
-| --- | --- |
-| `No site at dist — build it first.` | There is nothing built to publish. Run your project's build. |
-| `dist has no index.html — it is not a publishable site.` | The build ran but produced no page. Check your build settings. |
-| `cannot make a slug out of the folder name` | The folder's name has no letters or digits usable as an identity — a folder named in Chinese, for example. Pass `--slug my-report`. |
-| `Sign in first — run with --login.` | Run `costaff-workspace login`. |
-| `Sign-in code expired.` / `Sign-in timed out.` | The code only lasts a few minutes. Just push again for a new one. |
-| `… is not a CoStaff Workspace endpoint` | The service could not be reached — check your connection, then try again. |
-| `No file at that token.` | Wrong token, or the file is not yours and was not shared with you. |
 
 
 ## Licence

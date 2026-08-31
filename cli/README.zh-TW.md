@@ -74,6 +74,10 @@ costaff-workspace push
 
 那些連結就是檔案本身。傳一條給別人,他就能讀。
 
+> 專案的原始碼也會一起上傳 —— 那正是你之後能在別台機器上取回來的原因。
+> `node_modules` 和點開頭的檔案永遠不會被收進去,**你的 `.env` 不會跟著走**。
+> 只想發佈建置後的檔案就用 `--no-source`。
+
 ## 4. 管理你發佈的東西
 
 到 **<https://workspace.costaffs.app>** 改名字、分資料夾,以及決定每一份誰可以看。
@@ -138,34 +142,6 @@ costaff-workspace push --dry-run
 | `--no-source` | 只想發佈建置後的檔案 |
 
 `costaff-workspace push --help` 會列出全部。
-
----
-
-## 值得知道的幾件事
-
-**原始碼也會一起上去,那是刻意的。** 那正是之後 `pull` 能在任何機器上還你一個
-可以直接跑的專案的原因。`node_modules` 和點開頭的檔案永遠不會被收進去——
-**你的 `.env` 不會跟著走**。`--no-source` 可以不送,但那之後這份檔案就拉不回來了。
-
-**多份文件的專案會比單次建置久。** 每一份文件都會被建成獨立的 bundle。這是必要的:
-在一份共用的建置產物裡,你只傳一份給別人,他就能拿到其他全部。
-
-**別人分享給你的檔案,拉回來是一份副本。** 它不帶連結,所以推上去會發佈在你自己的
-帳號底下,原件不受影響。
-
----
-
-## 出問題的時候
-
-| 它說 | 意思,以及怎麼辦 |
-| --- | --- |
-| `No site at dist — build it first.` | 沒有建置產物可以發佈。先跑專案的建置指令。 |
-| `dist has no index.html — it is not a publishable site.` | 建置有跑,但沒有產出頁面。檢查建置設定。 |
-| `cannot make a slug out of the folder name` | 資料夾名字裡沒有可以當身分的英數字——例如中文資料夾名。加上 `--slug my-report`。 |
-| `Sign in first — run with --login.` | 執行 `costaff-workspace login`。 |
-| `Sign-in code expired.` / `Sign-in timed out.` | 驗證碼只有幾分鐘有效。再推一次就會拿到新的。 |
-| `… is not a CoStaff Workspace endpoint` | 連不上服務 —— 檢查一下網路再試一次。 |
-| `No file at that token.` | token 不對,或這份檔案不是你的、也沒有分享給你。 |
 
 
 ## 授權
