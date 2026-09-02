@@ -13,9 +13,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { unzipSync, zipSync } from 'fflate';
+import os from 'node:os';
 import { DEFAULT_ENDPOINT, kindFromManifest, readManifest } from './defaults.ts';
+import { SURFACES } from './integration.ts';
 import type { FileKind } from './protocol.ts';
 import { ensureBearer } from './push.ts';
+import { buildThemeDemo } from './stage.ts';
+import { tokenFor } from './state.ts';
 
 const USAGE = `costaff-workspace theme — the themes/ folder, kept in your workspace
 
@@ -29,6 +33,7 @@ const USAGE = `costaff-workspace theme — the themes/ folder, kept in your work
                      for. Read from package.json; pass it when that is wrong.
   --dir <dir>        the themes folder (default themes)
   --bearer <token>   auth token instead of a stored login
+  --no-demo          push the specs only; skip building the demos
 
 A theme is <id>.md, and optionally <id>.demo.tsx beside it. The name and
 description in the listing come from the .md's own frontmatter, so editing the
@@ -40,12 +45,17 @@ type Options = {
   kind?: FileKind;
   dir: string;
   bearer?: string;
+  demo: boolean;
 };
 
 const KINDS = new Set<FileKind>(['document', 'deck', 'workbook']);
 
 function parse(argv: string[]): { rest: string[]; opts: Options } {
-  const opts: Options = { endpoint: process.env.COSTAFF_WORKSPACE_ENDPOINT ?? DEFAULT_ENDPOINT, dir: 'themes' };
+  const opts: Options = {
+    endpoint: process.env.COSTAFF_WORKSPACE_ENDPOINT ?? DEFAULT_ENDPOINT,
+    dir: 'themes',
+    demo: true,
+  };
   const rest: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i] ?? '';
@@ -53,6 +63,7 @@ function parse(argv: string[]): { rest: string[]; opts: Options } {
     if (arg === '--endpoint') opts.endpoint = take();
     else if (arg === '--dir') opts.dir = take();
     else if (arg === '--bearer') opts.bearer = take();
+    else if (arg === '--no-demo') opts.demo = false;
     else if (arg === '--kind') {
       const value = take();
       if (!KINDS.has(value as FileKind)) throw new Error(`--kind must be document, deck or workbook`);
@@ -131,9 +142,60 @@ async function runPushThemes(opts: Options, out: (s: string) => void): Promise<v
 
   out(`  ${body.themes.length} ${body.themes.length === 1 ? 'theme' : 'themes'} — ${kind}`);
   for (const id of body.themes) out(`  ${id}`);
+
+  /*
+   * 示範。這是慢的那一半 —— 每份約兩秒，因為它是一次真的框架建置。所以規格先推完
+   * 再做，一份壞掉不會擋住其餘的，也不會擋住已經上去的規格。
+   */
+  if (opts.demo) {
+    const surface = SURFACES.find((s) => s.kindLabel.toLowerCase() === kindLabelOf(kind));
+    for (const id of body.themes) {
+      if (!wanted.includes(`${id}.demo.tsx`)) continue;
+      if (surface?.itemConfig === undefined) continue;
+      try {
+        const token = await tokenFor(root, opts.endpoint, `theme-${kind}`, id);
+        const outDir = path.join(os.tmpdir(), `costaff-theme-${id}-${Date.now()}`);
+        await buildThemeDemo({
+          root,
+          surface,
+          id,
+          title: id,
+          outDir,
+          config: { file: surface.itemConfig.file, body: surface.itemConfig.body(token) },
+        });
+        const tree: Record<string, Uint8Array> = {};
+        await collect(outDir, '', tree);
+        await fs.rm(outDir, { recursive: true, force: true });
+        const route = surface.itemRoute(id);
+        await call(opts, `/v1/themes/${kind}/${id}/demo?token=${token}&route=${encodeURIComponent(route)}`, {
+          bearer,
+          method: 'POST',
+          body: zipSync(tree),
+        });
+        out(`  ${id} — demo built`);
+      } catch (err) {
+        /* 說出來。安靜跳過會讓人以為示範上去了，而詳細頁上就是少一塊。 */
+        out(`  ${id} — demo skipped: ${String(err instanceof Error ? err.message : err).slice(0, 80)}`);
+      }
+    }
+  }
   /* 被跳過的要說出來。安靜跳過等於讓人以為推上去了。 */
   for (const s of body.skipped) {
     out(`  ${s.id} — skipped, ${s.reason === 'no_spec' ? `no ${s.id}.md beside the demo` : s.reason}`);
+  }
+}
+
+/** SURFACES 用 kindLabel 說明自己，push 用 kind；這裡把兩邊接起來。 */
+function kindLabelOf(kind: FileKind): string {
+  return kind === 'document' ? 'document' : kind === 'deck' ? 'deck' : 'workbook';
+}
+
+async function collect(dir: string, prefix: string, into: Record<string, Uint8Array>): Promise<void> {
+  for (const e of await fs.readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    const name = prefix === '' ? e.name : `${prefix}/${e.name}`;
+    if (e.isDirectory()) await collect(full, name, into);
+    else into[name] = new Uint8Array(await fs.readFile(full));
   }
 }
 
