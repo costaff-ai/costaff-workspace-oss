@@ -8,6 +8,7 @@
  */
 
 import { runPull } from './cli-pull.ts';
+import { runTheme } from './cli-theme.ts';
 import { runPush } from './cli.ts';
 import { DEFAULT_ENDPOINT } from './defaults.ts';
 
@@ -17,6 +18,7 @@ const USAGE = `costaff-workspace — publish to and pull back from CoStaff Works
 
   push            push this folder up (run it with nothing else)
   pull <token>    fetch a published file's source back out
+  theme           push, list, pull and remove the themes/ folder
   login           sign this machine in
   logout          forget this machine's sign-in
 
@@ -34,6 +36,9 @@ async function main(): Promise<void> {
       return runPush(rest);
     case 'pull':
       return runPull(rest);
+    case 'theme':
+    case 'themes':
+      return runTheme(rest);
     /* login 和 logout 走的是 push 那條路：它們本來就是同一組憑證。 */
     case 'login':
       return runPush([...rest, '--login']);
