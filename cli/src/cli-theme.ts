@@ -155,19 +155,34 @@ async function runPushThemes(opts: Options, out: (s: string) => void): Promise<v
       try {
         const token = await tokenFor(root, opts.endpoint, `theme-${kind}`, id);
         const outDir = path.join(os.tmpdir(), `costaff-theme-${id}-${Date.now()}`);
+        /* 有裸模式就用裸模式，沒有就退回一般的項目設定。 */
+        const cfg = surface.demoConfig ?? surface.itemConfig;
         await buildThemeDemo({
           root,
           surface,
           id,
           title: id,
           outDir,
-          config: { file: surface.itemConfig.file, body: surface.itemConfig.body(token) },
+          config: { file: cfg.file, body: cfg.body(token) },
         });
         const tree: Record<string, Uint8Array> = {};
         await collect(outDir, '', tree);
         await fs.rm(outDir, { recursive: true, force: true });
         const route = surface.itemRoute(id);
-        await call(opts, `/v1/themes/${kind}/${id}/demo?token=${token}&route=${encodeURIComponent(route)}`, {
+        /*
+         * 頁數。示範檔的 `export default [A, B, C]` 是一串識別字，數得出來 ——
+         * 用正規式讀而不求值，跟框架自己讀 meta 是同一套做法。數不出來就不送，
+         * 頁面上就不顯示總數，而不是顯示一個編出來的數字。
+         */
+        const source = await fs.readFile(path.join(dir, `${id}.demo.tsx`), 'utf8');
+        const listed = /export\s+default\s+\[([^\]]*)\]/.exec(source)?.[1] ?? '';
+        const pages = listed
+          .split(',')
+          .map((x) => x.trim())
+          .filter((x) => /^[A-Za-z_$][\w$]*$/.test(x)).length;
+        const q = new URLSearchParams({ token, route });
+        if (pages > 0) q.set('pages', String(pages));
+        await call(opts, `/v1/themes/${kind}/${id}/demo?${q}`, {
           bearer,
           method: 'POST',
           body: zipSync(tree),

@@ -34,6 +34,14 @@ export type Entry = {
 
 export type Surface = {
   id: string;
+  /*
+   * 主題示範專用的設定。示範要的是投影片本身，不是框架的整套介面 —— 標題列、
+   * 選單、Present 按鈕、縮圖列在一張「這個主題長什麼樣」的圖上全是雜訊。
+   *
+   * 只有 open-slide 給得出裸模式（showSlideUi）。另外兩個框架沒有對應的開關，
+   * 所以它們的示範會帶著自己的介面 —— 那是框架的事實，不是這裡少寫了什麼。
+   */
+  demoConfig?: { file: string; body: (token: string) => string };
   label: string;
   kindLabel: string;
   /** 專案裡放這種項目的資料夾。 */
@@ -146,6 +154,14 @@ export const SURFACES: Surface[] = [
         `export default {\n` +
         `  base: '/${token}/',\n` +
         `  build: { showSlideBrowser: false },\n` +
+        `};\n`,
+    },
+    demoConfig: {
+      file: 'open-slide.config.ts',
+      body: (token: string) =>
+        `export default {\n` +
+        `  base: '/${token}/',\n` +
+        `  build: { showSlideBrowser: false, showSlideUi: false },\n` +
         `};\n`,
     },
     itemRoute: (id: string) => `/s/${id}`,
