@@ -14,6 +14,8 @@ export type PushOptions = {
   route: string;
   entry?: string;
   subtitle?: string;
+  /** open-doc / open-slide 的 meta.theme。 */
+  theme?: string;
   folder?: string | null;
   token?: string;
   /*
@@ -137,6 +139,7 @@ export async function push(opts: PushOptions): Promise<PushResult | null> {
       token,
       title: opts.title,
       subtitle: opts.subtitle,
+      theme: opts.theme,
       folder: opts.folder,
       route: opts.route,
       entry: opts.entry ?? 'index.html',

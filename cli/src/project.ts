@@ -128,6 +128,7 @@ export async function pushProject(opts: {
       kind,
       title: entry.title ?? entry.id,
       subtitle: entry.subtitle ?? entry.description,
+      theme: entry.theme,
       route: surface.itemRoute(entry.id),
       siteDir: dir,
       /* 原始碼跟著走，否則推上去的只有產物，沒有人能在上面繼續工作。 */

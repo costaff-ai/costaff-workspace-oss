@@ -28,6 +28,8 @@ export type Entry = {
   subtitle?: string;
   description?: string;
   pageSize?: string;
+  /** 這份項目宣告它是照哪一份主題做的。open-sheet 沒有這個欄位。 */
+  theme?: string;
 };
 
 export type Surface = {
@@ -86,7 +88,7 @@ export const SURFACES: Surface[] = [
     },
     /** Where the framework's own router puts the item once mounted at root. */
     itemRoute: (id: string) => `/d/${id}`,
-    metaFields: ['title', 'subtitle', 'pageSize'],
+    metaFields: ['title', 'subtitle', 'pageSize', 'theme'],
     /*
      * The receiver's injected bar carries the way back. open-doc does NOT drop
      * its own arrow when the browser is off — showDocBrowser:false swaps `/`
@@ -117,7 +119,7 @@ export const SURFACES: Surface[] = [
     // carry a link back, which would be dead once the file is downloaded.
     buildArgs: (out: string) => ['build', '--out', out, '--html'],
     itemRoute: () => '/',
-    metaFields: ['title', 'description'],
+    metaFields: ['title', 'description', 'theme'],
     wrap: true,
     href: (id: string) => `/s/${id}/`,
     detail: () => 'HTML · xlsx · open-sheet',

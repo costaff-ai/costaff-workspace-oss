@@ -76,6 +76,8 @@ export type PushManifest = {
   token: string;
   title: string;
   subtitle?: string;
+  /** open-doc / open-slide 的 meta.theme —— 這份檔案是照哪一份主題做的。 */
+  theme?: string;
   folder?: string | null;
   route: string;
   entry: string;
