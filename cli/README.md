@@ -93,8 +93,16 @@ Names, folders, and who may read each file are managed at
 | --- | --- |
 | `costaff-workspace push` | publish this folder |
 | `costaff-workspace pull <token> [dir]` | fetch a published file's source |
+| `costaff-workspace theme push\|list\|pull\|rm` | keep the project's `themes/` folder in the workspace |
 | `costaff-workspace login` | sign this machine in |
 | `costaff-workspace logout` | forget this machine's sign-in |
+
+A theme is a house style — `themes/<id>.md` and an optional
+`themes/<id>.demo.tsx`. It belongs to the account rather than to one file, so
+the next document can start from the last one's look. The framework comes from
+`package.json`; `--kind document|deck|workbook` overrides it, and `--no-demo`
+sends the specs without building each demo.
+`costaff-workspace theme --help` lists the rest.
 
 ## Options
 

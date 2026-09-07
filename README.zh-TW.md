@@ -12,6 +12,9 @@
 適用於用 [open-doc](https://github.com/simonliu-ai-product/open-doc)（文件）、
 open-slide（簡報）、open-sheet（試算表）做的專案。
 
+你需要一個工作區的帳號——第一次 push 會帶你用 Google 登入。名額有限，新帳號有可能
+先進候補名單。
+
 ## 安裝
 
 需要 [Node.js](https://nodejs.org) 20 以上。
@@ -66,8 +69,11 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 | --- | --- |
 | `costaff-workspace push` | 發佈這個資料夾 |
 | `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
+| `costaff-workspace theme` | 把專案的 `themes/` 資料夾留在工作區 |
 | `costaff-workspace login` | 讓這台機器登入 |
 | `costaff-workspace logout` | 忘掉這台機器的登入 |
+
+每個指令都吃 `--help`，會印出它自己的選項。
 
 ### push
 
@@ -99,6 +105,26 @@ cd my-doc && pnpm install
 
 拿回來的是一個完整的專案。改完、建置、推上去，同一條位址就更新了。換一台電腦接手，
 走的就是這條路。
+
+### theme
+
+主題就是一套版面風格：`themes/<id>.md` 寫下它，可選的 `themes/<id>.demo.tsx` 展示它。
+把它們留在工作區，下一份文件才有辦法從上一份的樣子開始，而不是從零開始——你自己、
+或替你寫的 agent，取回那份規格照著做。
+
+```bash
+costaff-workspace theme push          # 推 ./themes 裡的每一份
+costaff-workspace theme list          # 看工作區裡有哪些
+costaff-workspace theme pull aurora   # 把其中一份寫回 ./themes
+costaff-workspace theme rm aurora     # 從工作區移除
+```
+
+主題屬於帳號，不屬於某一份檔案，所以你推的每個專案都拿得到同一批主題。框架從
+`package.json` 判斷；判斷錯的時候用 `--kind document|deck|workbook` 指定——同一個 id
+在不同框架各有一份時，也是靠它分辨。
+
+`push` 會順便把每份主題的示範建置出來，讓工作區能呈現它的樣子。那是一次真的建置，
+每份大約兩秒；`--no-demo` 可以跳過，只送規格。
 
 ### login / logout
 

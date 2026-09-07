@@ -12,6 +12,9 @@ onto another machine, edit, publish again — the link never changes.
 Works with projects made using [open-doc](https://github.com/simonliu-ai-product/open-doc)
 (documents), open-slide (decks) and open-sheet (workbooks).
 
+You need an account on the workspace — the first push walks you through signing
+in with Google. Places are limited, so a new account may land on a waitlist.
+
 ## Install
 
 Requires [Node.js](https://nodejs.org) 20 or newer.
@@ -69,8 +72,11 @@ alone is not enough.
 | --- | --- |
 | `costaff-workspace push` | publish this folder |
 | `costaff-workspace pull <token> [dir]` | fetch a published file's source |
+| `costaff-workspace theme` | keep the project's `themes/` folder in the workspace |
 | `costaff-workspace login` | sign this machine in |
 | `costaff-workspace logout` | forget this machine's sign-in |
+
+Any of them takes `--help` for its own options.
 
 ### push
 
@@ -103,6 +109,29 @@ cd my-doc && pnpm install
 
 What comes back is a complete project. Edit it, build it, push it, and the same
 address updates. This is how you continue on a different machine.
+
+### theme
+
+A theme is a house style: `themes/<id>.md` describes it, and an optional
+`themes/<id>.demo.tsx` shows it. Keeping them in the workspace is how the next
+document starts from the last one's look instead of from nothing — you, or an
+agent writing for you, pull the spec and follow it.
+
+```bash
+costaff-workspace theme push          # every theme in ./themes
+costaff-workspace theme list          # what is up there
+costaff-workspace theme pull aurora   # write one back into ./themes
+costaff-workspace theme rm aurora     # remove it from the workspace
+```
+
+Themes belong to the account, not to a file, so the same theme is available to
+every project you push. The framework is read from `package.json`; pass
+`--kind document|deck|workbook` when that guess is wrong, which is also how you
+tell apart two themes that share an id across frameworks.
+
+`push` builds each theme's demo so the workspace can show it. That is a real
+build and takes a couple of seconds per theme — `--no-demo` skips it and sends
+the specs alone.
 
 ### login / logout
 
