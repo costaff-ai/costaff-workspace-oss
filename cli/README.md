@@ -95,6 +95,7 @@ Names, folders, and who may read each file are managed at
 | `costaff-workspace pull <token> [dir]` | fetch a published file's source |
 | `costaff-workspace theme push\|list\|pull\|rm` | keep the project's `themes/` folder in the workspace |
 | `costaff-workspace whoami` | what this machine is signed in as |
+| `costaff-workspace skills` | install the agent skill into this project |
 | `costaff-workspace login` | sign this machine in |
 | `costaff-workspace logout` | forget this machine's sign-in |
 

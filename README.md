@@ -74,6 +74,7 @@ alone is not enough.
 | `costaff-workspace pull <token> [dir]` | fetch a published file's source |
 | `costaff-workspace theme` | keep the project's `themes/` folder in the workspace |
 | `costaff-workspace whoami` | what this machine is signed in as |
+| `costaff-workspace skills` | install the agent skill into this project |
 | `costaff-workspace login` | sign this machine in |
 | `costaff-workspace logout` | forget this machine's sign-in |
 
@@ -165,6 +166,25 @@ Under `--json` a command that would need an interactive sign-in **stops rather
 than waiting**. The device code is printed for a person to approve in a browser;
 a script cannot do that, and swallowing the code would leave it polling until
 the code expired, looking like a hang.
+
+### skills
+
+The package carries an agent skill — how to publish, what to check before it
+does, and where it must stop and ask you. Install it into a project and Claude
+Code (or anything reading `.agents/skills/`) picks it up:
+
+```bash
+costaff-workspace skills            # writes .claude/skills/ and .agents/skills/
+costaff-workspace skills --dry-run  # say what would change
+```
+
+Re-run it after upgrading the CLI; it overwrites, because these files belong to
+the package rather than to your project. Edit a copy under a different name if
+you want your own.
+
+The skill tells the agent to check `whoami` first and to **stop and ask you** to
+sign in rather than trying — the device code needs a browser, and an agent
+cannot use one.
 
 ### login / logout
 

@@ -8,6 +8,7 @@
  */
 
 import { runPull } from './cli-pull.ts';
+import { runSkills } from './cli-skills.ts';
 import { runTheme } from './cli-theme.ts';
 import { runWhoami } from './cli-whoami.ts';
 import { runPush } from './cli.ts';
@@ -22,6 +23,7 @@ const USAGE = `costaff-workspace — publish to and pull back from CoStaff Works
   pull <token>    fetch a published file's source back out
   theme           push, list, pull and remove the themes/ folder
   whoami          what this machine is signed in as
+  skills          install the agent skill into this project
   login           sign this machine in
   logout          forget this machine's sign-in
 
@@ -52,6 +54,8 @@ async function main(): Promise<void> {
       return runTheme(rest);
     case 'whoami':
       return runWhoami(rest);
+    case 'skills':
+      return runSkills(rest);
     /* login 和 logout 走的是 push 那條路：它們本來就是同一組憑證。 */
     case 'login':
       return runPush([...rest, '--login']);

@@ -88,6 +88,7 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 | `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
 | `costaff-workspace theme push\|list\|pull\|rm` | 把專案的 `themes/` 資料夾留在工作區 |
 | `costaff-workspace whoami` | 這台機器登入的是誰 |
+| `costaff-workspace skills` | 把 agent skill 裝進這個專案 |
 | `costaff-workspace login` | 讓這台機器登入 |
 | `costaff-workspace logout` | 忘掉這台機器的登入 |
 

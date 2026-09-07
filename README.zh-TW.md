@@ -71,6 +71,7 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 | `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
 | `costaff-workspace theme` | 把專案的 `themes/` 資料夾留在工作區 |
 | `costaff-workspace whoami` | 這台機器登入的是誰 |
+| `costaff-workspace skills` | 把 agent skill 裝進這個專案 |
 | `costaff-workspace login` | 讓這台機器登入 |
 | `costaff-workspace logout` | 忘掉這台機器的登入 |
 
@@ -154,6 +155,22 @@ $ costaff-workspace pull nope --json
 
 `--json` 之下，需要互動登入的指令會**直接停下來，而不是等**。裝置碼是印給人在瀏覽器
 按核准用的，腳本按不了；把碼吞掉只會讓它輪詢到過期，看起來像當掉。
+
+### skills
+
+套件裡帶了一份 agent skill——怎麼發佈、動手之前該確認什麼、以及哪些時候必須停下來
+問你。裝進專案之後，Claude Code（或任何讀 `.agents/skills/` 的工具）就會用到：
+
+```bash
+costaff-workspace skills            # 寫入 .claude/skills/ 和 .agents/skills/
+costaff-workspace skills --dry-run  # 只說會改什麼
+```
+
+升級 CLI 之後再跑一次。它是覆寫的，因為這些檔案屬於套件而不是你的專案；想自己改就
+另存一個名字。
+
+skill 會要求 agent 先查 `whoami`，未登入時**停下來請你**去登入，而不是自己嘗試——
+裝置碼要瀏覽器，agent 沒有。
 
 ### login / logout
 
