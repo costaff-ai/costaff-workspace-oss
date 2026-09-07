@@ -9,8 +9,10 @@
 
 import { runPull } from './cli-pull.ts';
 import { runTheme } from './cli-theme.ts';
+import { runWhoami } from './cli-whoami.ts';
 import { runPush } from './cli.ts';
 import { DEFAULT_ENDPOINT } from './defaults.ts';
+import { fail, setJson } from './report.ts';
 
 const USAGE = `costaff-workspace — publish to and pull back from CoStaff Workspace
 
@@ -19,17 +21,26 @@ const USAGE = `costaff-workspace — publish to and pull back from CoStaff Works
   push            push this folder up (run it with nothing else)
   pull <token>    fetch a published file's source back out
   theme           push, list, pull and remove the themes/ folder
+  whoami          what this machine is signed in as
   login           sign this machine in
   logout          forget this machine's sign-in
 
   costaff-workspace <command> --help   for that command's options
+  --json                               one line of JSON instead of prose
 
 Endpoint defaults to ${DEFAULT_ENDPOINT}; --endpoint or
 COSTAFF_WORKSPACE_ENDPOINT points at a receiver you run yourself.
 `;
 
 async function main(): Promise<void> {
-  const [command, ...rest] = process.argv.slice(2);
+  /*
+   * 在分派之前就摘掉。每個子指令的解析器都把「--flag 後面接非 -- 的字」讀成一組
+   * 值，留著它 `--json push` 會被當成 --json=push；而且錯誤處理器也要先知道該用
+   * 哪一種格式，那比任何子指令都早。
+   */
+  const argv = process.argv.slice(2).filter((a) => a !== '--json');
+  setJson(argv.length !== process.argv.length - 2);
+  const [command, ...rest] = argv;
 
   switch (command) {
     case 'push':
@@ -39,6 +50,8 @@ async function main(): Promise<void> {
     case 'theme':
     case 'themes':
       return runTheme(rest);
+    case 'whoami':
+      return runWhoami(rest);
     /* login 和 logout 走的是 push 那條路：它們本來就是同一組憑證。 */
     case 'login':
       return runPush([...rest, '--login']);
@@ -57,6 +70,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err: unknown) => {
-  process.stderr.write(`error: ${err instanceof Error ? err.message : String(err)}\n`);
+  fail(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

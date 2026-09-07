@@ -73,6 +73,7 @@ alone is not enough.
 | `costaff-workspace push` | publish this folder |
 | `costaff-workspace pull <token> [dir]` | fetch a published file's source |
 | `costaff-workspace theme` | keep the project's `themes/` folder in the workspace |
+| `costaff-workspace whoami` | what this machine is signed in as |
 | `costaff-workspace login` | sign this machine in |
 | `costaff-workspace logout` | forget this machine's sign-in |
 
@@ -132,6 +133,38 @@ tell apart two themes that share an id across frameworks.
 `push` builds each theme's demo so the workspace can show it. That is a real
 build and takes a couple of seconds per theme — `--no-demo` skips it and sends
 the specs alone.
+
+### whoami
+
+Answers the one question a script has to settle before it does anything: is
+there a credential here, or does a person have to sign in once? It reads what is
+stored and does not call the workspace, so it is instant.
+
+```bash
+costaff-workspace whoami
+costaff-workspace whoami --json
+```
+
+### Machine-readable output
+
+`--json` works on every command that has a result. One line on stdout, nothing
+else — the prose is suppressed rather than mixed in, and failures come back in
+the same shape with exit status 1.
+
+```console
+$ costaff-workspace push --json
+{"ok":true,"command":"push","endpoint":"https://workspace.costaffs.app","dryRun":false,
+ "items":[{"slug":"q3-report","kind":"deck","token":"8fjq2ldk3nx7yrpv0aet",
+           "url":"https://workspace.costaffs.app/8fjq2ldk3nx7yrpv0aet"}]}
+
+$ costaff-workspace pull nope --json
+{"ok":false,"error":"not signed in — run `costaff-workspace login` once, or set COSTAFF_WORKSPACE_TOKEN"}
+```
+
+Under `--json` a command that would need an interactive sign-in **stops rather
+than waiting**. The device code is printed for a person to approve in a browser;
+a script cannot do that, and swallowing the code would leave it polling until
+the code expired, looking like a hang.
 
 ### login / logout
 

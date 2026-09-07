@@ -87,8 +87,12 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 | `costaff-workspace push` | 發佈這個資料夾 |
 | `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
 | `costaff-workspace theme push\|list\|pull\|rm` | 把專案的 `themes/` 資料夾留在工作區 |
+| `costaff-workspace whoami` | 這台機器登入的是誰 |
 | `costaff-workspace login` | 讓這台機器登入 |
 | `costaff-workspace logout` | 忘掉這台機器的登入 |
+
+任何一個加上 `--json` 就會印一行 JSON 而不是散文——成功和失敗同一種形狀；需要
+互動登入的指令會直接停下來，而不是等瀏覽器。
 
 主題就是一套版面風格——`themes/<id>.md` 加上可選的 `themes/<id>.demo.tsx`。它屬於帳號
 而不屬於某一份檔案，所以下一份文件可以從上一份的樣子開始。框架從 `package.json` 判斷，

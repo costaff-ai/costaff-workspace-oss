@@ -15,6 +15,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { line } from './report.ts';
 import { readEntries } from './entries.ts';
 import { type Entry, SURFACES, type Surface } from './integration.ts';
 import type { FileKind } from './protocol.ts';
@@ -67,6 +68,9 @@ export type BuildItem = (opts: {
   config?: { file: string; body: string };
 }) => Promise<void>;
 
+/** 推上去的一份。`--json` 把這個列表交出去，人看的那行則照舊。 */
+export type PushedItem = { slug: string; kind: FileKind; token: string; url: string };
+
 export async function pushProject(opts: {
   root: string;
   endpoint: string;
@@ -75,9 +79,10 @@ export async function pushProject(opts: {
   buildItem: BuildItem;
   base?: Partial<PushOptions>;
   out?: (line: string) => void;
-}): Promise<void> {
+}): Promise<PushedItem[]> {
   const { root, endpoint, items, buildItem } = opts;
-  const write = opts.out ?? ((line: string) => process.stdout.write(line));
+  const write = opts.out ?? line;
+  const pushed: PushedItem[] = [];
   const dist = path.join(root, 'dist');
   const scratch = path.join(root, '.build');
 
@@ -139,10 +144,13 @@ export async function pushProject(opts: {
       cwd: root,
       out: () => {},
     });
-    write(`→ ${new URL(endpoint).origin}/${token}\n`);
+    const url = `${new URL(endpoint).origin}/${token}`;
+    write(`→ ${url}\n`);
+    pushed.push({ slug: entry.id, kind, token, url });
   }
 
   await fs.rm(scratch, { recursive: true, force: true });
+  return pushed;
 }
 
 /** 預設的建置器：呼叫框架自己的 CLI。測試會換掉它。 */

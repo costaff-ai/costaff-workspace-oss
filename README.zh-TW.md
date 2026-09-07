@@ -70,6 +70,7 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 | `costaff-workspace push` | 發佈這個資料夾 |
 | `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
 | `costaff-workspace theme` | 把專案的 `themes/` 資料夾留在工作區 |
+| `costaff-workspace whoami` | 這台機器登入的是誰 |
 | `costaff-workspace login` | 讓這台機器登入 |
 | `costaff-workspace logout` | 忘掉這台機器的登入 |
 
@@ -125,6 +126,34 @@ costaff-workspace theme rm aurora     # 從工作區移除
 
 `push` 會順便把每份主題的示範建置出來，讓工作區能呈現它的樣子。那是一次真的建置，
 每份大約兩秒；`--no-demo` 可以跳過，只送規格。
+
+### whoami
+
+回答腳本在做任何事之前必須先確定的那件事：這裡有沒有憑證，還是得請人先登入一次？
+它讀的是本機存的東西，不會連線到工作區，所以是即時的。
+
+```bash
+costaff-workspace whoami
+costaff-workspace whoami --json
+```
+
+### 給機器讀的輸出
+
+`--json` 在每個有結果的指令上都有效。stdout 上就一行，沒有別的——給人看的散文
+會被靜音而不是混進來；失敗也是同一種形狀，並以狀態碼 1 結束。
+
+```console
+$ costaff-workspace push --json
+{"ok":true,"command":"push","endpoint":"https://workspace.costaffs.app","dryRun":false,
+ "items":[{"slug":"q3-report","kind":"deck","token":"8fjq2ldk3nx7yrpv0aet",
+           "url":"https://workspace.costaffs.app/8fjq2ldk3nx7yrpv0aet"}]}
+
+$ costaff-workspace pull nope --json
+{"ok":false,"error":"not signed in — run `costaff-workspace login` once, or set COSTAFF_WORKSPACE_TOKEN"}
+```
+
+`--json` 之下，需要互動登入的指令會**直接停下來，而不是等**。裝置碼是印給人在瀏覽器
+按核准用的，腳本按不了；把碼吞掉只會讓它輪詢到過期，看起來像當掉。
 
 ### login / logout
 

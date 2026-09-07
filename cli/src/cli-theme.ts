@@ -17,6 +17,7 @@ import os from 'node:os';
 import { DEFAULT_ENDPOINT, kindFromManifest, readManifest } from './defaults.ts';
 import { SURFACES } from './integration.ts';
 import type { FileKind } from './protocol.ts';
+import { done, line } from './report.ts';
 import { ensureBearer } from './push.ts';
 import { buildThemeDemo } from './stage.ts';
 import { tokenFor } from './state.ts';
@@ -222,12 +223,13 @@ async function runList(opts: Options, out: (s: string) => void): Promise<void> {
   };
   if (themes.length === 0) {
     out('  no themes yet — run `costaff-workspace theme push` in a project that has some');
-    return;
+  } else {
+    const width = Math.max(...themes.map((t) => t.id.length));
+    for (const t of themes) {
+      out(`  ${t.id.padEnd(width)}  ${t.kind.padEnd(9)}${t.name}${t.hasDemo ? '' : '  (no demo)'}`);
+    }
   }
-  const width = Math.max(...themes.map((t) => t.id.length));
-  for (const t of themes) {
-    out(`  ${t.id.padEnd(width)}  ${t.kind.padEnd(9)}${t.name}${t.hasDemo ? '' : '  (no demo)'}`);
-  }
+  done({ command: 'theme list', endpoint: opts.endpoint, themes });
 }
 
 async function runPullTheme(opts: Options, id: string, out: (s: string) => void): Promise<void> {
@@ -259,8 +261,8 @@ export async function runTheme(argv: string[]): Promise<void> {
     process.stdout.write(USAGE);
     return;
   }
-  const out = (line: string): void => {
-    process.stdout.write(`${line}\n`);
+  const out = (text: string): void => {
+    line(`${text}\n`);
   };
   const { rest, opts } = parse(argv.slice(1));
   const action = argv[0];

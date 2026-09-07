@@ -1,5 +1,6 @@
 import { createBundle } from './bundle.ts';
 import { PublishError, discover, formatBytes, pollDeviceAuth, startDeviceAuth, upload } from './client.ts';
+import { jsonMode } from './report.ts';
 import { clearCredential, loadCredential, saveCredential } from './credentials.ts';
 import type { FileKind, PushResult } from './protocol.ts';
 import { collectSource } from './source.ts';
@@ -34,6 +35,17 @@ export type PushOptions = {
 };
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+/*
+ * 裝置碼是印給人看的，而核准要有人在瀏覽器按下去。`--json` 的讀者按不了，靜音的
+ * 輸出還會把碼吞掉 —— 剩下的就是一個看起來像當掉的程序，輪詢到過期為止。與其那樣，
+ * 不如立刻說清楚缺什麼。
+ */
+function refuseInteractiveLogin(): never {
+  throw new PublishError(
+    'not signed in — run `costaff-workspace login` once, or set COSTAFF_WORKSPACE_TOKEN',
+  );
+}
 
 /** Exported so `pull` runs the same device flow rather than its own. */
 export async function login(
@@ -94,6 +106,7 @@ async function resolveBearer(opts: PushOptions, name: string): Promise<string> {
     const stored = await loadCredential(opts.endpoint);
     if (stored !== null) return stored.token;
   }
+  if (jsonMode()) refuseInteractiveLogin();
   return login(opts, name);
 }
 

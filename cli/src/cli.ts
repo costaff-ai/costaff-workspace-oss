@@ -1,4 +1,5 @@
 import { PublishError } from './client.ts';
+import { done, line } from './report.ts';
 import {
   DEFAULT_ENDPOINT,
   kindFromManifest,
@@ -100,7 +101,7 @@ function parse(argv: string[]): Parsed {
     login: flags.login === true,
     logout: flags.logout === true,
     dryRun: flags['dry-run'] === true,
-    out: (line) => process.stdout.write(line),
+    out: line,
   };
 }
 
@@ -185,8 +186,8 @@ export async function runPush(argv: string[]): Promise<void> {
       by.set(kind, (by.get(kind) ?? 0) + 1);
     }
     const shape = [...by].map(([kind, n]) => `${n} ${kind}${n === 1 ? '' : 's'}`).join(', ');
-    process.stdout.write(`  ${shape} — one bundle each\n`);
-    await pushProject({
+    line(`  ${shape} — one bundle each\n`);
+    const pushed = await pushProject({
       root,
       endpoint: opts.endpoint,
       items,
@@ -194,9 +195,28 @@ export async function runPush(argv: string[]): Promise<void> {
       buildItem: realBuildItem,
       base: { bearer: opts.bearer, folder: opts.folder },
     });
+    done({ command: 'push', endpoint: opts.endpoint, dryRun: opts.dryRun === true, items: pushed });
     return;
   }
 
   await fill(opts);
-  await push(opts);
+  const result = await push(opts);
+  if (result !== null) {
+    done({
+      command: 'push',
+      endpoint: opts.endpoint,
+      dryRun: opts.dryRun === true,
+      /* token 是網址的最後一段 —— pull 要的就是它，別讓讀的人自己去切。 */
+      items: [
+        {
+          slug: result.slug,
+          kind: opts.kind,
+          token: result.url.split('/').pop() ?? '',
+          url: result.url,
+        },
+      ],
+      updated: result.updated,
+      workspace: result.workspace,
+    });
+  }
 }

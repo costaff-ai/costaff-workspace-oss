@@ -94,8 +94,13 @@ Names, folders, and who may read each file are managed at
 | `costaff-workspace push` | publish this folder |
 | `costaff-workspace pull <token> [dir]` | fetch a published file's source |
 | `costaff-workspace theme push\|list\|pull\|rm` | keep the project's `themes/` folder in the workspace |
+| `costaff-workspace whoami` | what this machine is signed in as |
 | `costaff-workspace login` | sign this machine in |
 | `costaff-workspace logout` | forget this machine's sign-in |
+
+`--json` on any of them prints one line of JSON instead of prose — the same
+shape for success and failure, and a command that would need an interactive
+sign-in stops rather than waiting for a browser.
 
 A theme is a house style — `themes/<id>.md` and an optional
 `themes/<id>.demo.tsx`. It belongs to the account rather than to one file, so

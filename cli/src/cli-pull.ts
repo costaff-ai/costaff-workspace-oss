@@ -1,6 +1,7 @@
 import { PublishError, discover } from './client.ts';
 import { DEFAULT_ENDPOINT } from './defaults.ts';
 import { pull } from './pull.ts';
+import { done, jsonMode, line } from './report.ts';
 import { login } from './push.ts';
 
 const USAGE = `costaff-workspace pull — fetch a published file's source back out
@@ -47,16 +48,25 @@ export async function runPull(argv: string[]): Promise<void> {
   const token = positional[0];
   if (token === undefined) throw new PublishError('missing <token>');
 
-  const out = (line: string): void => {
-    process.stdout.write(line);
+  const out = (text: string): void => {
+    line(text);
   };
-  await pull({
+  const result = await pull({
     endpoint,
     token,
     dir: positional[1],
     force: flags.force === true,
     bearer: str('bearer'),
     out,
-    signIn: async () => login({ endpoint, out }, (await discover(endpoint)).name),
+    signIn: async () => {
+      /* 同 push：`--json` 的讀者按不了瀏覽器裡的核准，卡住比報錯更難查。 */
+      if (jsonMode()) {
+        throw new PublishError(
+          'not signed in — run `costaff-workspace login` once, or set COSTAFF_WORKSPACE_TOKEN',
+        );
+      }
+      return login({ endpoint, out }, (await discover(endpoint)).name);
+    },
   });
+  done({ command: 'pull', endpoint, token, ...result });
 }
