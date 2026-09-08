@@ -63,6 +63,18 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 [workspace.costaffs.app](https://workspace.costaffs.app) 邀請他，或把檔案改成公開連結。
 **光是把位址傳出去並不夠。**
 
+
+<details>
+<summary>推一份自己建好的站台</summary>
+
+每份檔案是從 `/<token>/` 供應的，所以建置出來的資產路徑必須跟著那段前綴——而 Vite
+的 `base` 預設是 `/`，產出的是 `/assets/index-xxx.js`，掛到 token 底下就全部 404。
+症狀是頁面打得開、工作區的列也在，只有內容一片空白。
+
+`push` 會擋下這種建置，並把該用的 token 印出來。專案推送撞不到這個坑：那些建置的
+設定是 CLI 自己寫的。
+</details>
+
 ## 指令
 
 | | |

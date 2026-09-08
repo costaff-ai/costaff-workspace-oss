@@ -66,6 +66,19 @@ the file into a public link, at
 [workspace.costaffs.app](https://workspace.costaffs.app). Sending the address
 alone is not enough.
 
+
+<details>
+<summary>Pushing a build you made yourself</summary>
+
+Each file is served from `/<token>/`, so the build has to reference its assets
+relative to that — Vite's `base` defaults to `/`, which produces
+`/assets/index-xxx.js` and 404s once the file is mounted under its token. The
+page opens, the workspace bar renders, and the content is blank.
+
+`push` refuses that build and prints the token to build against. A project push
+does not hit this: the CLI writes the config for those builds itself.
+</details>
+
 ## Commands
 
 | | |

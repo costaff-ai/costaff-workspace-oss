@@ -1,5 +1,8 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { createBundle } from './bundle.ts';
 import { PublishError, discover, formatBytes, pollDeviceAuth, startDeviceAuth, upload } from './client.ts';
+import { rootAbsoluteRefs } from './integration.ts';
 import { jsonMode } from './report.ts';
 import { clearCredential, loadCredential, saveCredential } from './credentials.ts';
 import type { FileKind, PushResult } from './protocol.ts';
@@ -110,6 +113,32 @@ async function resolveBearer(opts: PushOptions, name: string): Promise<string> {
   return login(opts, name);
 }
 
+/**
+ * 建置出來的位址有沒有帶著 token。
+ *
+ * 每份檔案掛在 `/<token>/` 底下，所以 bundle 的資產路徑必須是相對的、或以那段
+ * 前綴開頭。Vite 的 `base` 預設是 `/`，一個照著自己專案 `pnpm build` 的人拿到的
+ * 就是 `/assets/index-xxx.js` —— 推上去之後頁面打得開、外框也在，只有內容是一片
+ * 黑：那些請求敲的是網站根目錄，那裡沒有那個檔案。
+ *
+ * 專案推送不會走到這裡，它的建置設定是 CLI 自己寫的。會撞上的是手動推一份自己
+ * 建好的站台的人，而那正是最沒有線索可循的情況 —— 黑畫面不會說出原因。
+ */
+async function checkBakedBase(siteDir: string, entry: string, token: string): Promise<void> {
+  const html = await fs.readFile(path.join(siteDir, entry), 'utf8').catch(() => null);
+  if (html === null) return;
+  const wrong = rootAbsoluteRefs(html, `/${token}/`);
+  if (wrong.length === 0) return;
+  throw new PublishError(
+    `${entry} points its assets at the site root (${wrong.slice(0, 2).join(', ')}), but this ` +
+      `file is served from /${token}/, so every one of them would 404 and the page would ` +
+      `render blank.\n` +
+      `  Build with that base and push again:\n` +
+      `    base: '/${token}/'      in your vite config, or\n` +
+      `    vite build --base=/${token}/`,
+  );
+}
+
 export async function push(opts: PushOptions): Promise<PushResult | null> {
   const write = opts.out ?? (() => {});
   const cwd = opts.cwd ?? process.cwd();
@@ -132,6 +161,8 @@ export async function push(opts: PushOptions): Promise<PushResult | null> {
   // were baked against it at build time, so discovering it late would mean
   // discovering it wrong.
   const token = opts.token ?? (await tokenFor(cwd, endpoint, opts.kind, opts.slug));
+
+  await checkBakedBase(opts.siteDir, opts.entry ?? 'index.html', token);
 
   const source =
     opts.sourceRoot === undefined || opts.sourceDir === undefined

@@ -274,11 +274,22 @@ export function checkOutput(surface: Surface, files: string[]): string[] {
   return problems;
 }
 
+/**
+ * 指到根目錄、而不是指到自己那段前綴的資產。
+ *
+ * `//cdn…` 是協定相對的絕對網址，不是本地路徑；`/prefix/…` 已經對了。剩下以 `/`
+ * 開頭的，都會在掛到子路徑之後去敲錯的地方。
+ */
+export function rootAbsoluteRefs(html: string, prefix: string): string[] {
+  return [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
+    .map((m) => m[1] ?? '')
+    .filter((r) => r.startsWith('/') && !r.startsWith('//') && !r.startsWith(`${prefix}`));
+}
+
 /** The mounted SPA must reference its assets under its own mount, not the root. */
 export function checkBase(surface: Surface, indexHtml: string): string[] {
   if (surface.type !== 'spa') return [];
-  const refs = [...indexHtml.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1]);
-  const wrong = refs.filter((r) => r.startsWith('/') && !r.startsWith(`/${surface.mount}/`));
+  const wrong = rootAbsoluteRefs(indexHtml, `/${surface.mount}/`);
   return wrong.length === 0
     ? []
     : [

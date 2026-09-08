@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { rootAbsoluteRefs } from './integration.ts';
 import { kindFromManifest, slugFromDir, titleFromManifest } from './defaults.ts';
 
 describe('slugFromDir', () => {
@@ -74,5 +75,38 @@ describe('titleFromManifest', () => {
     expect(titleFromManifest({ description: '   ' }, 'q3')).toBe('q3');
     expect(titleFromManifest({}, 'q3')).toBe('q3');
     expect(titleFromManifest(null, 'q3')).toBe('q3');
+  });
+});
+
+/**
+ * 建置出來的位址有沒有帶著 token。
+ *
+ * 回報進來的症狀是「頁面打得開、外框也在，只有內容一片黑」—— 因為 Vite 的 `base`
+ * 預設是 `/`，而每份檔案是掛在 `/<token>/` 底下的。那些資產請求敲的是網站根目錄，
+ * 那裡沒有那個檔案，而 404 的 JS 不會說話。
+ *
+ * 專案推送撞不到：它的建置設定是 CLI 自己寫的。撞到的是手動推一份自己建好的站台
+ * 的人，也就是最沒有線索可循的那個人。
+ */
+describe('assets that point at the site root', () => {
+  const P = '/tok123/';
+
+  it('are caught, because they would all 404', () => {
+    const html = '<script src="/assets/index-abc.js"></script><link href="/assets/x.css">';
+    expect(rootAbsoluteRefs(html, P)).toEqual(['/assets/index-abc.js', '/assets/x.css']);
+  });
+
+  it('are fine once the base is the token', () => {
+    expect(rootAbsoluteRefs('<script src="/tok123/assets/index-abc.js"></script>', P)).toEqual([]);
+  });
+
+  it('are fine when relative, which survives any prefix', () => {
+    expect(rootAbsoluteRefs('<script src="./assets/index-abc.js"></script>', P)).toEqual([]);
+  });
+
+  /* 這兩種不是本地路徑，套前綴上去反而會把它們弄壞。 */
+  it('leave absolute and protocol-relative urls alone', () => {
+    const html = '<link href="https://cdn.example.com/x.css"><script src="//cdn.example.com/y.js">';
+    expect(rootAbsoluteRefs(html, P)).toEqual([]);
   });
 });
