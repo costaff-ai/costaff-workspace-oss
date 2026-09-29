@@ -19,6 +19,15 @@ const SCAFFOLD = [
   'open-slide.config.ts',
   'open-sheet.config.ts',
   'pnpm-workspace.yaml',
+  /*
+   * So a rebuild installs what the author built with. Without it every rebuild
+   * re-resolves each range to whatever is newest that day: the same file
+   * published twice a month apart could be built by two different versions of
+   * its framework. Where the regenerated package.json differs from it — a
+   * `link:` spec turned into a version — pnpm re-resolves that one entry and
+   * keeps the rest.
+   */
+  'pnpm-lock.yaml',
   'scripts',
 ];
 
@@ -90,7 +99,9 @@ async function resolveSpecs(
     if (typeof version !== 'string') {
       throw new Error(`${name} has no version in its package.json.`);
     }
-    out[name] = `^${version}`;
+    // Exact, not a range: a range lets a rebuild drift to a newer release than
+    // the one this was built with, which is the thing the lockfile is here to stop.
+    out[name] = version;
   }
   return out;
 }

@@ -51,6 +51,20 @@ A push carries the source. `costaff-workspace pull <token>` hands back a complet
 project on any machine — install, edit, publish, same link. Nothing is tied to
 the computer that published it first.
 
+### 📌 Rebuilt with the versions you built with
+
+A push carries `pnpm-lock.yaml`, and a framework linked locally with `link:` is
+recorded as the **exact** version installed. Whoever rebuilds it later — another
+machine, or the workspace — installs what you had, not whatever is newest that day.
+
+### 👥 Edit together without overwriting each other
+
+Once the owner makes someone an editor, their `pull` returns the latest revision
+and its number, and their `push` sends that number back — if somebody has
+changed the file since, the push is refused instead of overwriting their work.
+Anyone who would rather not work locally can run `costaff-workspace mcp` and let
+their own agent edit and publish on the workspace.
+
 ### 🔒 Private until you say otherwise
 
 A newly published file opens for its owner and nobody else. Readers are invited,
@@ -92,7 +106,8 @@ Names, folders, and who may read each file are managed at
 | | |
 | --- | --- |
 | `costaff-workspace push` | publish this folder |
-| `costaff-workspace pull <token> [dir]` | fetch a published file's source |
+| `costaff-workspace pull <token> [dir]` | fetch a published file's source (an editor gets the latest revision) |
+| `costaff-workspace mcp` | print the MCP address and the Claude Code command; the key you make on the workspace's devices page |
 | `costaff-workspace theme push\|list\|pull\|rm` | keep the project's `themes/` folder in the workspace |
 | `costaff-workspace whoami` | what this machine is signed in as |
 | `costaff-workspace skills` | install the agent skill into this project |

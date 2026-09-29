@@ -12,7 +12,7 @@ import {
   saveCredential,
 } from './credentials.ts';
 import { isDiscovery, isPushResult, PUSH_PROTOCOL } from './protocol.ts';
-import { newToken, statePath, tokenFor } from './state.ts';
+import { baseFor, newToken, rememberUrl, statePath, tokenFor } from './state.ts';
 
 let tmp: string;
 
@@ -228,5 +228,29 @@ describe('token state', () => {
     // Adopted once, then stable: asking again returns the same address rather
     // than reaching for another old key.
     expect(await tokenFor(tmp, 'http://x:8787', 'document', 'report')).toBe('legacytoken00000');
+  });
+});
+
+describe('the revision a copy is at', () => {
+  const endpoint = 'https://workspace.example.com';
+
+  it('adopts the revision a pull wrote under the owner’s workspace key', async () => {
+    await fs.mkdir(path.dirname(statePath(tmp)), { recursive: true });
+    await fs.writeFile(
+      statePath(tmp),
+      JSON.stringify({
+        version: 1,
+        endpoints: { [endpoint]: { 'simon/document/report': { token: 'd3728nnvh0opwph1', revision: 7 } } },
+      }),
+    );
+    expect(await tokenFor(tmp, endpoint, 'document', 'report')).toBe('d3728nnvh0opwph1');
+    expect(await baseFor(tmp, endpoint, 'document', 'report')).toBe(7);
+  });
+
+  it('remembers the revision a push became, and forgets none it was not told', async () => {
+    await rememberUrl(tmp, endpoint, 'document', 'report', 'd3728nnvh0opwph1', 'u', 8);
+    expect(await baseFor(tmp, endpoint, 'document', 'report')).toBe(8);
+    await rememberUrl(tmp, endpoint, 'document', 'report', 'd3728nnvh0opwph1', 'u');
+    expect(await baseFor(tmp, endpoint, 'document', 'report')).toBeUndefined();
   });
 });

@@ -18,6 +18,8 @@ export type Discovery = {
   push: string;
   /** Absent on a receiver that does not hand source back. */
   pull?: string;
+  /** Optional: where an agent edits files over MCP with the same device token. */
+  mcp?: string;
   maxBytes: number;
 };
 
@@ -81,6 +83,12 @@ export type PushManifest = {
   folder?: string | null;
   route: string;
   entry: string;
+  /**
+   * The source revision this was built from, as the last pull or push reported
+   * it. Lets the receiver refuse a push that would publish over work landed
+   * since — by an agent over MCP, or another editor. Omitted when unknown.
+   */
+  base?: number;
   source?: PushSource;
 };
 
@@ -89,6 +97,8 @@ export type PushResult = {
   slug: string;
   url: string;
   updated: boolean;
+  /** The source revision this push became, on a receiver that keeps them. */
+  revision?: number;
 };
 
 export function isDiscovery(value: unknown): value is Discovery {

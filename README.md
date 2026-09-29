@@ -84,7 +84,8 @@ does not hit this: the CLI writes the config for those builds itself.
 | | |
 | --- | --- |
 | `costaff-workspace push` | publish this folder |
-| `costaff-workspace pull <token> [dir]` | fetch a published file's source |
+| `costaff-workspace pull <token> [dir]` | fetch a published file's source (an editor gets the latest revision) |
+| `costaff-workspace mcp` | print the MCP address and the Claude Code command; the key you make on the workspace's devices page |
 | `costaff-workspace theme` | keep the project's `themes/` folder in the workspace |
 | `costaff-workspace whoami` | what this machine is signed in as |
 | `costaff-workspace skills` | install the agent skill into this project |

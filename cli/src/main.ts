@@ -7,6 +7,7 @@
  * 還有哪些兄弟指令存在。
  */
 
+import { runMcp } from './cli-mcp.ts';
 import { runPull } from './cli-pull.ts';
 import { runSkills } from './cli-skills.ts';
 import { runTheme } from './cli-theme.ts';
@@ -21,6 +22,7 @@ const USAGE = `costaff-workspace — publish to and pull back from CoStaff Works
 
   push            push this folder up (run it with nothing else)
   pull <token>    fetch a published file's source back out
+  mcp             connect your agent to edit files you own or were shared
   theme           push, list, pull and remove the themes/ folder
   whoami          what this machine is signed in as
   skills          install the agent skill into this project
@@ -49,6 +51,8 @@ async function main(): Promise<void> {
       return runPush(rest);
     case 'pull':
       return runPull(rest);
+    case 'mcp':
+      return runMcp(rest);
     case 'theme':
     case 'themes':
       return runTheme(rest);

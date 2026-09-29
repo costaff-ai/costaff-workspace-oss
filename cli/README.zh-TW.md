@@ -46,6 +46,17 @@ guessed --slug q3-report  --kind deck  --source-dir .
 推送會帶著原始碼。`costaff-workspace pull <token>` 會在任何機器上還你一個完整的
 專案——安裝、修改、發佈，同一條連結。沒有任何東西綁在最初發佈的那台電腦上。
 
+### 📌 用你建置時的版本重建
+
+推送會帶上 `pnpm-lock.yaml`，本機用 `link:` 連著的框架會記成實際安裝的**確切版本**。
+之後不管在誰的機器或工作區上重建，裝的都是你當時用的那些版本，不會自己換成更新的。
+
+### 👥 一起改，不會互相蓋掉
+
+擁有者在分享面板把人設成「可編輯」之後，對方 `pull` 拿到的是最新版和它的版本號，
+`push` 會帶著那個版本號 —— 有人在那之後改過就拒絕，不會把別人的修改蓋掉。
+不想在本機動手的人可以跑 `costaff-workspace mcp`，讓自己的 Agent 直接在工作區改、發佈。
+
 ### 🔒 預設私人，由你決定開放
 
 剛發佈的檔案只有擁有者打得開。要讓誰讀，是在檔案管理員裡邀請，或把它改成公開連結。
@@ -85,7 +96,8 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 | | |
 | --- | --- |
 | `costaff-workspace push` | 發佈這個資料夾 |
-| `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
+| `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼（編輯者拿到的是最新版） |
+| `costaff-workspace mcp` | 印出 MCP 位址與加進 Claude Code 的指令；金鑰到網站的裝置頁自己建立 |
 | `costaff-workspace theme push\|list\|pull\|rm` | 把專案的 `themes/` 資料夾留在工作區 |
 | `costaff-workspace whoami` | 這台機器登入的是誰 |
 | `costaff-workspace skills` | 把 agent skill 裝進這個專案 |

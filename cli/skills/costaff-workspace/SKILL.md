@@ -72,6 +72,23 @@ What comes back is a complete project. Build it, push it, and the same address
 updates — that is how a document moves between machines without the link
 changing.
 
+If someone else can edit the same file, the push says which revision it was
+built from. When another editor has written since, it fails with
+`This push was built from r4, but r5 (…) has landed since` — pull again into a
+fresh directory, carry your change over, rebuild, and push. Never force it.
+
+## Editing without the project on this machine
+
+The workspace is also an MCP server. `costaff-workspace mcp --json` returns the
+address and a `claude` command with `<costaff-workspace-api-key>` in place of the
+key. The key is the user's to make, on the workspace's devices page (MCP keys →
+Create key) — ask them to make one and run the command themselves; never ask
+them to paste the key to you. Once connected, the tools are
+`list_files`, `read_file`, `write_files` (with the revision you read as `base`),
+`set_dependencies`, `publish`, `publish_status`, `history` and `diff`. A write
+that clashes with someone else's comes back with both versions: keep what both
+of you meant, not only yours.
+
 ## Themes
 
 A theme is a house style the next document can start from: `themes/<id>.md`

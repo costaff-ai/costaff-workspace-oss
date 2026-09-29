@@ -47,7 +47,14 @@ describe('collectSource', () => {
     await write('package.json', JSON.stringify({ dependencies: { '@open-document/core': 'link:../../open-doc/packages/core' } }));
     await write('node_modules/@open-document/core/package.json', JSON.stringify({ version: '0.3.0' }));
     const source = await collect();
-    expect(source.dependencies['@open-document/core']).toBe('^0.3.0');
+    expect(source.dependencies['@open-document/core']).toBe('0.3.0');
+  });
+
+  it('carries the lockfile, so a rebuild installs what was built with', async () => {
+    await write('package.json', JSON.stringify({ dependencies: { react: '^18.3.1' } }));
+    await write('pnpm-lock.yaml', "lockfileVersion: '9.0'\n");
+    const source = await collect();
+    expect([...source.files.keys()]).toContain('scaffold/pnpm-lock.yaml');
   });
 
   it('leaves a published spec alone', async () => {

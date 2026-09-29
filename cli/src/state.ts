@@ -2,7 +2,12 @@ import { randomBytes } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-type Entry = { token: string; url?: string };
+/*
+ * `revision` is the source revision this copy was pulled or last pushed at. A
+ * push sends it as its base, so the receiver can tell it was built from
+ * something that is no longer the latest.
+ */
+type Entry = { token: string; url?: string; revision?: number };
 type State = { version: 1; endpoints: Record<string, Record<string, Entry>> };
 
 /**
@@ -80,6 +85,17 @@ export async function tokenFor(
   return entry.token;
 }
 
+/** The revision this copy is at, if a pull or a push recorded one. Read after `tokenFor`, which settles the key. */
+export async function baseFor(
+  userCwd: string,
+  endpoint: string,
+  kind: string,
+  slug: string,
+): Promise<number | undefined> {
+  const state = await read(statePath(userCwd));
+  return state.endpoints[originOf(endpoint)]?.[keyOf(kind, slug)]?.revision;
+}
+
 export async function rememberUrl(
   userCwd: string,
   endpoint: string,
@@ -87,13 +103,14 @@ export async function rememberUrl(
   slug: string,
   token: string,
   url: string,
+  revision?: number,
 ): Promise<void> {
   const file = statePath(userCwd);
   const state = await read(file);
   const origin = originOf(endpoint);
   state.endpoints[origin] = {
     ...state.endpoints[origin],
-    [keyOf(kind, slug)]: { token, url },
+    [keyOf(kind, slug)]: { token, url, ...(revision === undefined ? {} : { revision }) },
   };
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, `${JSON.stringify(state, null, 2)}\n`);

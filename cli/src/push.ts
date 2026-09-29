@@ -7,7 +7,7 @@ import { jsonMode } from './report.ts';
 import { clearCredential, loadCredential, saveCredential } from './credentials.ts';
 import type { FileKind, PushResult } from './protocol.ts';
 import { collectSource } from './source.ts';
-import { forgetToken, rememberUrl, tokenFor } from './state.ts';
+import { baseFor, forgetToken, rememberUrl, tokenFor } from './state.ts';
 
 export type PushOptions = {
   endpoint: string;
@@ -187,6 +187,7 @@ export async function push(opts: PushOptions): Promise<PushResult | null> {
       folder: opts.folder,
       route: opts.route,
       entry: opts.entry ?? 'index.html',
+      base: await baseFor(cwd, endpoint, opts.kind, opts.slug),
     },
   });
 
@@ -218,7 +219,7 @@ export async function push(opts: PushOptions): Promise<PushResult | null> {
       await clearCredential(endpoint);
       bearer = await login(opts, discovery.name);
       result = await upload(endpoint, discovery, bearer, bundle.bytes);
-      await rememberUrl(cwd, endpoint, opts.kind, opts.slug, token, result.url);
+      await rememberUrl(cwd, endpoint, opts.kind, opts.slug, token, result.url, result.revision);
       write(`${result.updated ? 'updated' : 'pushed'} ${result.workspace}/${opts.slug}\n  ${result.url}\n`);
       return result;
     }
@@ -234,7 +235,7 @@ export async function push(opts: PushOptions): Promise<PushResult | null> {
     }
     throw err;
   }
-  await rememberUrl(cwd, endpoint, opts.kind, opts.slug, token, result.url);
+  await rememberUrl(cwd, endpoint, opts.kind, opts.slug, token, result.url, result.revision);
 
   write(`${result.updated ? 'updated' : 'pushed'} ${result.workspace}/${opts.slug}\n  ${result.url}\n`);
   if (!result.updated) write('  只有你看得到 — 在網頁上開這份檔案，用「分享」決定誰能看\n');

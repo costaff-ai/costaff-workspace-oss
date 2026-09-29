@@ -80,7 +80,8 @@ q3-numbers                   → https://workspace.costaffs.app/8fjq2ldk3nx7yrpv
 | | |
 | --- | --- |
 | `costaff-workspace push` | 發佈這個資料夾 |
-| `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼 |
+| `costaff-workspace pull <token> [dir]` | 取回某份已發佈檔案的原始碼（編輯者拿到的是最新版） |
+| `costaff-workspace mcp` | 印出 MCP 位址與加進 Claude Code 的指令；金鑰到網站的裝置頁自己建立 |
 | `costaff-workspace theme` | 把專案的 `themes/` 資料夾留在工作區 |
 | `costaff-workspace whoami` | 這台機器登入的是誰 |
 | `costaff-workspace skills` | 把 agent skill 裝進這個專案 |
