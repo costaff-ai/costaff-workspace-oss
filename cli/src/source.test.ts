@@ -50,6 +50,19 @@ describe('collectSource', () => {
     expect(source.dependencies['@open-document/core']).toBe('0.3.0');
   });
 
+  /* The lockfile pins each patch's hash: an install without the patch file fails outright. */
+  it('carries the patch files pnpm-workspace.yaml names', async () => {
+    await write('package.json', JSON.stringify({ dependencies: { '@open-dashboard/core': '0.7.1' } }));
+    await write(
+      'pnpm-workspace.yaml',
+      "minimumReleaseAgeExclude:\n  - '@open-dashboard/core@0.7.1'\npatchedDependencies:\n  '@open-dashboard/core@0.7.1': patches/@open-dashboard__core@0.7.1.patch\n  left-pad: '../outside.patch'\n",
+    );
+    await write('patches/@open-dashboard__core@0.7.1.patch', 'diff --git a/x b/x\n');
+    const source = await collect();
+    expect([...source.files.keys()]).toContain('scaffold/patches/@open-dashboard__core@0.7.1.patch');
+    expect([...source.files.keys()].some((k) => k.includes('outside'))).toBe(false);
+  });
+
   it('carries the lockfile, so a rebuild installs what was built with', async () => {
     await write('package.json', JSON.stringify({ dependencies: { react: '^18.3.1' } }));
     await write('pnpm-lock.yaml', "lockfileVersion: '9.0'\n");

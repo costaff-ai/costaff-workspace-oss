@@ -114,6 +114,24 @@ async function resolveSpecs(
   return out;
 }
 
+/**
+ * The patch files pnpm-workspace.yaml's `patchedDependencies` names. The lockfile records each patch's
+ * hash, so an install without the file fails outright; they travel with the rest of the build setup.
+ * Read with a pattern, not a YAML parser: the entries are `'pkg@version': path/to/file.patch`.
+ */
+async function patchFiles(root: string): Promise<string[]> {
+  const raw = await fs.readFile(path.join(root, 'pnpm-workspace.yaml'), 'utf8').catch(() => null);
+  if (raw === null) return [];
+  const block = /^patchedDependencies:\s*\n((?:[ \t]+.*\n?)*)/m.exec(raw)?.[1] ?? '';
+  const out: string[] = [];
+  for (const m of block.matchAll(/:\s*['"]?([^'"\s#]+\.patch)['"]?/g)) {
+    const rel = path.posix.normalize(m[1]);
+    // Inside the workspace only: this is a path the push will read and upload.
+    if (!rel.startsWith('../') && !path.isAbsolute(rel)) out.push(rel);
+  }
+  return out;
+}
+
 export async function collectSource(input: SourceInput): Promise<CollectedSource> {
   const itemDir = path.join(input.root, input.dir);
   const files = await collect(itemDir, 'item');
@@ -124,7 +142,11 @@ export async function collectSource(input: SourceInput): Promise<CollectedSource
     throw new Error(`${itemDir} has no ${input.entry}.`);
   }
 
-  const scaffoldPaths = new Set([...SCAFFOLD, ...(input.extraScaffold ?? [])]);
+  const scaffoldPaths = new Set([
+    ...SCAFFOLD,
+    ...(input.extraScaffold ?? []),
+    ...(await patchFiles(input.root)),
+  ]);
   for (const name of scaffoldPaths) {
     const abs = path.join(input.root, name);
     const stat = await fs.stat(abs).catch(() => null);
