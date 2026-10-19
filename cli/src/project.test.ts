@@ -12,7 +12,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { runPush } from './cli.ts';
 import { refreshSeconds } from './entries.ts';
+import { SURFACES } from './integration.ts';
 import { type BuildItem, pushProject, scanProject } from './project.ts';
 
 let root: string;
@@ -116,6 +118,30 @@ describe('meta.refresh', () => {
     for (const bad of ['30s', '2 minutes', '', '25h', '1.5m']) {
       expect(() => refreshSeconds(bad)).toThrow(/between 1m and 24h/);
     }
+  });
+});
+
+describe('一個看板一個 bundle', () => {
+  /*
+   * 其他看板會被放進暫存區（看板之間可以互相 import），但只能建這一個：一起建的話，
+   * 別的看板的資料會進到這份的 bundle，拿到這份連結的人就打得開。
+   */
+  it('建置時指名這一個看板', () => {
+    const dashboards = SURFACES.find((s) => s.dir === 'dashboards')!;
+    expect(dashboards.buildArgs('/tmp/out', 'umpire')).toEqual(['build', 'umpire', '--out', '/tmp/out']);
+  });
+
+  it('--item 只處理專案裡的那一個；不存在就在建置前說出來', async () => {
+    const dir = path.join(root, 'dashboards', 'live');
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, 'index.tsx'), "export const meta = { title: 'live' };\n");
+    await fs.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify({ dependencies: { '@open-dashboard/core': '0.7.1' } }),
+    );
+    await expect(
+      runPush(['--item', 'umpire', '--dry-run', '--source-root', root, '--endpoint', 'http://localhost:1']),
+    ).rejects.toThrow(/--item umpire: no such item/);
   });
 });
 

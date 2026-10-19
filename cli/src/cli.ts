@@ -44,12 +44,15 @@ bundle, and the source travels with it so it can be pulled back and edited.
                        on its own (with --endpoint) it just signs in
   --logout             forget the stored login for this endpoint
   --dry-run            package and report, do not upload
+  --item <id>          in a project of several, only this one
 `;
 
 type Parsed = PushOptions & {
   help: boolean;
   given: { slug: boolean; kind: boolean; title: boolean };
   noSource: boolean;
+  /** One item of a multi-item project: what a rebuild of that one file asks for. */
+  item?: string;
 };
 
 function parse(argv: string[]): Parsed {
@@ -99,6 +102,7 @@ function parse(argv: string[]): Parsed {
     login: flags.login === true,
     logout: flags.logout === true,
     dryRun: flags['dry-run'] === true,
+    item: str('item'),
     out: line,
   };
 }
@@ -174,7 +178,12 @@ export async function runPush(argv: string[]): Promise<void> {
    * 明確給了 --slug 的人是在手動推某一份，照他說的做。
    */
   const root = opts.sourceRoot ?? process.cwd();
-  const items = opts.given.slug ? [] : await scanProject(root);
+  const scanned = opts.given.slug ? [] : await scanProject(root);
+  const items = opts.item === undefined ? scanned : scanned.filter((it) => it.entry.id === opts.item);
+  // A single-bundle folder has no items to pick from; --item means nothing there.
+  if (opts.item !== undefined && scanned.length > 0 && items.length === 0) {
+    throw new PublishError(`--item ${opts.item}: no such item in this project`);
+  }
   if (items.length > 0) {
     /* kindLabel, not label: label is the workspace shell's Chinese wording, and
        every other line this command prints is English. */

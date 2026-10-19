@@ -193,7 +193,12 @@ export const SURFACES: Surface[] = [
     mount: 'b',
     type: 'spa',
     stage: 'dashboards',
-    buildArgs: (out: string) => ['build', '--out', out],
+    /*
+     * One dashboard, by name. The others are staged — a dashboard may import
+     * another's constants — but building them too would put their data in this
+     * one's bundle, where whoever it is shared with could open them.
+     */
+    buildArgs: (out: string, id?: string) => ['build', ...(id === undefined ? [] : [id]), '--out', out],
     itemRoute: (id: string) => `/d/${id}`,
     metaFields: ['title', 'description', 'theme', 'refresh'],
     entryFiles: ['index.tsx', 'queries.sql'],
