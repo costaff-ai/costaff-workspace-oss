@@ -29,6 +29,7 @@ export type PushOptions = {
   sourceRoot?: string;
   sourceDir?: string;
   sourceEntry?: string;
+  extraScaffold?: readonly string[];
   bearer?: string;
   login?: boolean;
   logout?: boolean;
@@ -171,6 +172,7 @@ export async function push(opts: PushOptions): Promise<PushResult | null> {
           root: opts.sourceRoot,
           dir: opts.sourceDir,
           entry: opts.sourceEntry ?? 'index.tsx',
+          extraScaffold: opts.extraScaffold,
         });
 
   const bundle = await createBundle({

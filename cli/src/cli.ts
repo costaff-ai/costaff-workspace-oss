@@ -8,7 +8,7 @@ import {
   titleFromManifest,
 } from './defaults.ts';
 import { pushProject, realBuildItem, scanProject } from './project.ts';
-import type { FileKind } from './protocol.ts';
+import { type FileKind, isFileKind, KINDS } from './protocol.ts';
 import { type PushOptions, push } from './push.ts';
 
 const USAGE = `costaff-workspace push — push one built file into your workspace
@@ -22,8 +22,8 @@ bundle, and the source travels with it so it can be pulled back and edited.
   --endpoint <url>     receiver (default ${DEFAULT_ENDPOINT},
                        or COSTAFF_WORKSPACE_ENDPOINT)
   --slug <slug>        the file's identity (default: the folder's name)
-  --kind <kind>        document | workbook | deck (default: read from
-                       package.json, else document)
+  --kind <kind>        document | workbook | deck | dashboard | ... (default:
+                       read from open-x.json or package.json, else document)
   --site-dir <dir>     built bundle to upload (default dist)
   --title <text>       display name (default: package.json description,
                        else the slug)
@@ -45,8 +45,6 @@ bundle, and the source travels with it so it can be pulled back and edited.
   --logout             forget the stored login for this endpoint
   --dry-run            package and report, do not upload
 `;
-
-const KINDS = new Set<FileKind>(['document', 'workbook', 'deck']);
 
 type Parsed = PushOptions & {
   help: boolean;
@@ -72,7 +70,7 @@ function parse(argv: string[]): Parsed {
     typeof flags[k] === 'string' ? (flags[k] as string) : undefined;
 
   const kind = (str('kind') ?? 'document') as FileKind;
-  if (!KINDS.has(kind)) throw new PublishError(`--kind must be one of ${[...KINDS].join(', ')}`);
+  if (!isFileKind(kind)) throw new PublishError(`--kind must be one of ${[...KINDS].join(', ')}`);
 
   const slug = str('slug') ?? '';
   return {

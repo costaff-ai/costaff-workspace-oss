@@ -56,6 +56,38 @@ describe('scanProject', () => {
     const items = await scanProject(root);
     expect(items.map((i) => i.entry.id)).toEqual(['real-doc']);
   });
+
+  it('讀取 open-x.json 宣告的自訂 Open-X 專案與 SQL 註解標題', async () => {
+    await fs.writeFile(
+      path.join(root, 'open-x.json'),
+      JSON.stringify({
+        version: 1,
+        surfaces: [
+          {
+            kind: 'dashboard',
+            label: '儀表板',
+            dir: 'dashboards',
+            cli: 'open-dashboard',
+            entryFiles: ['queries.sql', 'index.tsx'],
+            sharedPaths: ['charts', 'data'],
+          },
+        ],
+      }),
+    );
+    const dir = path.join(root, 'dashboards', 'car-pk');
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, 'queries.sql'), `-- @title: 台灣熱門休旅車對決\nSELECT 1;\n`);
+
+    const items = await scanProject(root);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.entry).toEqual({
+      id: 'car-pk',
+      entryFile: 'queries.sql',
+      title: '台灣熱門休旅車對決',
+    });
+    expect(items[0]?.surface.kindLabel).toBe('dashboard');
+    expect(items[0]?.surface.sharedPaths).toEqual(['charts', 'data']);
+  });
 });
 
 describe('pushProject', () => {

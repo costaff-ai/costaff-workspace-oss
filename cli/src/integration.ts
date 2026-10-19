@@ -14,6 +14,9 @@
  *   design tokens                internal — so we derive, not copy    high
  */
 
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 export const CONTRACT_VERSION = 1;
 
 /**
@@ -30,6 +33,8 @@ export type Entry = {
   pageSize?: string;
   /** 這份項目宣告它是照哪一份主題做的。open-sheet 沒有這個欄位。 */
   theme?: string;
+  /** 實際找到的入口檔名（如 index.tsx 或 queries.sql），供 source 打包使用。 */
+  entryFile?: string;
 };
 
 export type Surface = {
@@ -50,11 +55,15 @@ export type Surface = {
   mount: string;
   type: 'spa' | 'files';
   stage: string;
-  buildArgs: (out: string) => string[];
+  buildArgs: (out: string, id?: string, token?: string) => string[];
   /** 寫進暫存專案，讓單一項目以自己為根建置。 */
-  itemConfig?: { file: string; body: (token: string) => string };
+  itemConfig?: { file: string; body: (token: string, id?: string) => string };
   itemRoute: (id: string) => string;
   metaFields: readonly string[];
+  /** 候選入口檔名清單；未指定時預設找 index.{tsx,jsx,ts,js}。 */
+  entryFiles?: readonly string[];
+  /** 建置與攜帶原始碼時需一併帶走的根目錄共用路徑（如 charts、data）。 */
+  sharedPaths?: readonly string[];
   backLink?: string;
   wrap?: boolean;
   href: (id: string) => string;
@@ -172,6 +181,84 @@ export const SURFACES: Surface[] = [
     backLink: 'bar',
     href: (id: string) => `/p/s/${id}`,
     detail: () => '16:9 · open-slide',
+  },
+  {
+    id: 'dashboards',
+    label: '儀表板',
+    kindLabel: 'Dashboard',
+    dir: 'dashboards',
+    cli: 'open-dashboard',
+    mount: 'b',
+    type: 'spa',
+    stage: 'dashboards',
+    buildArgs: (out: string) => ['build', '--out', out],
+    itemRoute: (id: string) => `/d/${id}`,
+    metaFields: ['title', 'description', 'theme'],
+    entryFiles: ['index.tsx', 'queries.sql'],
+    sharedPaths: ['dashboards', 'charts', 'data', 'scripts', 'open-dashboard.config.ts'],
+    backLink: 'bar',
+    href: (id: string) => `/b/d/${id}`,
+    detail: () => 'SQL · open-dashboard',
+  },
+  {
+    id: 'forms',
+    label: '表單',
+    kindLabel: 'Form',
+    dir: 'forms',
+    cli: 'open-form',
+    mount: 'f',
+    type: 'spa',
+    stage: 'forms',
+    buildArgs: (out: string, id = '') => (id ? ['build', id, '--out', out] : ['build', '--out', out]),
+    itemRoute: (id: string) => `/f/${id}`,
+    metaFields: ['title', 'description', 'theme'],
+    sharedPaths: ['data', 'scripts', 'open-form.config.ts'],
+    backLink: 'bar',
+    href: (id: string) => `/f/f/${id}`,
+    detail: () => 'Form · open-form',
+  },
+  {
+    id: 'maps',
+    label: '地圖',
+    kindLabel: 'Map',
+    dir: 'maps',
+    cli: 'open-map',
+    mount: 'm',
+    type: 'spa',
+    stage: 'maps',
+    buildArgs: (out: string) => ['build', '--out-dir', out],
+    itemConfig: {
+      file: 'open-map.config.ts',
+      body: (token: string) =>
+        `export default {\n` +
+        `  base: '/${token}/',\n` +
+        `  build: { showMapBrowser: false },\n` +
+        `};\n`,
+    },
+    itemRoute: (id: string) => `/m/${id}`,
+    metaFields: ['title', 'subtitle', 'description', 'theme'],
+    sharedPaths: ['data', 'scripts'],
+    backLink: 'bar',
+    href: (id: string) => `/m/m/${id}`,
+    detail: () => 'GeoJSON · open-map',
+  },
+  {
+    id: 'recordings',
+    label: '錄製',
+    kindLabel: 'Recording',
+    dir: 'recordings',
+    cli: 'open-recording',
+    mount: 'r',
+    type: 'spa',
+    stage: 'recordings',
+    buildArgs: (out: string, id = '') => (id ? ['build', id, '--out', out] : ['build', '--out', out]),
+    itemRoute: (id: string) => `/r/${id}`,
+    metaFields: ['title', 'description'],
+    entryFiles: ['meta.json'],
+    sharedPaths: ['open-recording.config.ts'],
+    backLink: 'bar',
+    href: (id: string) => `/r/r/${id}`,
+    detail: () => 'WebM · Transcript · open-recording',
   },
 ];
 
@@ -297,3 +384,85 @@ export function checkBase(surface: Surface, indexHtml: string): string[] {
           `\`base: '/${surface.mount}/'\` did not take effect, so every asset will 404.`,
       ];
 }
+
+/**
+ * Open-X 透口契約（open-x.json 或 package.json#openX）。
+ *
+ * 讓任何 Open-X 專案（例如 open-dashboard、open-form、open-map 或第三方專案）
+ * 自己宣告它的目錄、入口檔、建置指令與共用目錄，不需要每加一個框架就回來改 SURFACES。
+ */
+export type OpenXManifestSurface = {
+  id?: string;
+  kind: string;
+  label?: string;
+  dir: string;
+  cli: string;
+  type?: 'spa' | 'files';
+  buildArgs?: string[];
+  stageConfig?: { file: string; template: string };
+  itemRoute?: string;
+  entryFiles?: string[];
+  sharedPaths?: string[];
+};
+
+export async function loadProjectSurfaces(root: string): Promise<Surface[]> {
+  let raw = await fs.readFile(path.join(root, 'open-x.json'), 'utf8').catch(() => null);
+  if (raw === null) {
+    const pkgRaw = await fs.readFile(path.join(root, 'package.json'), 'utf8').catch(() => null);
+    if (pkgRaw !== null) {
+      try {
+        const pkg = JSON.parse(pkgRaw) as { openX?: unknown };
+        if (pkg.openX && typeof pkg.openX === 'object') raw = JSON.stringify(pkg.openX);
+      } catch {
+        // Ignore malformed package.json
+      }
+    }
+  }
+  if (raw === null) return SURFACES;
+
+  let parsed: { surfaces?: OpenXManifestSurface[] };
+  try {
+    parsed = JSON.parse(raw) as { surfaces?: OpenXManifestSurface[] };
+  } catch {
+    return SURFACES;
+  }
+  if (!Array.isArray(parsed.surfaces) || parsed.surfaces.length === 0) return SURFACES;
+
+  const tpl = (str: string, vars: Record<string, string>): string =>
+    str.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? '');
+
+  const custom: Surface[] = parsed.surfaces.map((s) => {
+    const id = s.id ?? s.dir;
+    return {
+      id,
+      label: s.label ?? s.kind,
+      kindLabel: s.kind,
+      dir: s.dir,
+      cli: s.cli,
+      mount: id.slice(0, 1),
+      type: s.type ?? 'spa',
+      stage: id,
+      buildArgs: (out: string, item = '', token = '') =>
+        (s.buildArgs ?? ['build', '--out-dir', '{{out}}']).map((arg) =>
+          tpl(arg, { out, id: item, token }),
+        ),
+      itemConfig: s.stageConfig
+        ? {
+            file: s.stageConfig.file,
+            body: (token: string, item = '') => tpl(s.stageConfig!.template, { token, id: item }),
+          }
+        : undefined,
+      itemRoute: (item: string) => tpl(s.itemRoute ?? '/', { id: item }),
+      metaFields: ['title', 'subtitle', 'description', 'pageSize', 'theme'],
+      entryFiles: s.entryFiles,
+      sharedPaths: s.sharedPaths,
+      backLink: 'bar',
+      href: (item: string) => `/${id}/${item}`,
+      detail: () => s.cli,
+    };
+  });
+
+  const customDirs = new Set(custom.map((c) => c.dir));
+  return [...custom, ...SURFACES.filter((b) => !customDirs.has(b.dir))];
+}
+

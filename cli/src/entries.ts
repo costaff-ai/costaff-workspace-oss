@@ -2,10 +2,18 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Entry, Surface } from './integration.ts';
 
+const DEFAULT_ENTRIES = ['index.tsx', 'index.jsx', 'index.ts', 'index.js'];
+
 /** Same technique the frameworks use to read their own `meta` — never evaluate the module. */
 function metaField(source: string, field: string): string | undefined {
-  const m = source.match(new RegExp(`${field}\\s*:\\s*(['"\`])((?:\\\\.|(?!\\1).)*)\\1`));
+  const m = source.match(new RegExp(`['"]?${field}['"]?\\s*:\\s*(['"\`])((?:\\\\.|(?!\\1).)*)\\1`));
   return m === null ? undefined : m[2];
+}
+
+/** Supports SQL-based items like open-dashboard queries.sql (`-- @title: ...` or `-- title: ...`). */
+function sqlCommentMeta(source: string, field: string): string | undefined {
+  const m = source.match(new RegExp(`^\\s*--\\s*@?${field}\\s*:\\s*(.+)$`, 'im'));
+  return m === null ? undefined : m[1]?.trim();
 }
 
 export async function readEntries(root: string, surface: Surface): Promise<Entry[]> {
@@ -19,21 +27,30 @@ export async function readEntries(root: string, surface: Surface): Promise<Entry
   } catch {
     return [];
   }
+  const candidates = surface.entryFiles ?? DEFAULT_ENTRIES;
   const entries: Entry[] = [];
   for (const id of ids) {
-    let source = '';
-    for (const ext of ['tsx', 'jsx', 'ts', 'js']) {
+    const sources: string[] = [];
+    let entryFile = '';
+    for (const candidate of candidates) {
       try {
-        source = await fs.readFile(path.join(base, id, `index.${ext}`), 'utf8');
-        break;
+        const content = await fs.readFile(path.join(base, id, candidate), 'utf8');
+        sources.push(content);
+        if (entryFile === '') entryFile = candidate;
       } catch {
-        // Try the next extension.
+        // Try the next candidate.
       }
     }
-    if (source === '') continue;
-    const entry: Entry = { id };
+    if (entryFile === '') continue;
+    const entry: Entry = { id, entryFile };
     for (const f of surface.metaFields) {
-      (entry as Record<string, unknown>)[f] = metaField(source, f);
+      for (const source of sources) {
+        const val = metaField(source, f) ?? sqlCommentMeta(source, f);
+        if (val !== undefined) {
+          (entry as Record<string, unknown>)[f] = val;
+          break;
+        }
+      }
     }
     entries.push(entry);
   }

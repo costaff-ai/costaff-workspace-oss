@@ -15,9 +15,13 @@ import path from 'node:path';
 
 /** Workspace-level files a single-item rebuild needs, when they exist. */
 const SCAFFOLD = [
+  'open-x.json',
   'open-doc.config.ts',
   'open-slide.config.ts',
   'open-sheet.config.ts',
+  'open-dashboard.config.ts',
+  'open-form.config.ts',
+  'open-map.config.ts',
   'pnpm-workspace.yaml',
   /*
    * So a rebuild installs what the author built with. Without it every rebuild
@@ -29,6 +33,8 @@ const SCAFFOLD = [
    */
   'pnpm-lock.yaml',
   'scripts',
+  'themes',
+  'assets',
 ];
 
 /** Local specs name a path on the publisher's disk and mean nothing elsewhere. */
@@ -41,6 +47,8 @@ export type SourceInput = {
   dir: string;
   /** The file a rebuild starts from, relative to `dir`. */
   entry: string;
+  /** Additional workspace-relative paths to pack under `scaffold/` (e.g. charts, data). */
+  extraScaffold?: readonly string[];
 };
 
 export type CollectedSource = {
@@ -116,7 +124,8 @@ export async function collectSource(input: SourceInput): Promise<CollectedSource
     throw new Error(`${itemDir} has no ${input.entry}.`);
   }
 
-  for (const name of SCAFFOLD) {
+  const scaffoldPaths = new Set([...SCAFFOLD, ...(input.extraScaffold ?? [])]);
+  for (const name of scaffoldPaths) {
     const abs = path.join(input.root, name);
     const stat = await fs.stat(abs).catch(() => null);
     if (stat === null) continue;

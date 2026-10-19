@@ -47,17 +47,25 @@ export async function readManifest(root: string): Promise<Manifest | null> {
 }
 
 /*
- * 三個框架各自的套件前綴。相依套件是專案自己寫下的事實，比副檔名或資料夾名可靠。
+ * 各框架各自的套件前綴。相依套件是專案自己寫下的事實，比副檔名或資料夾名可靠。
  */
 const BY_PREFIX: [string, FileKind][] = [
   ['@open-document/', 'document'],
   ['@open-slide/', 'deck'],
   ['@open-sheet/', 'workbook'],
+  ['@open-dashboard/', 'dashboard'],
+  ['@open-form/', 'form'],
+  ['@open-map/', 'map'],
+  ['@open-recording/', 'recording'],
 ];
 
 /** 從相依套件認出這是哪一種檔案；認不出來回 null，由呼叫端決定要不要退回預設。 */
 export function kindFromManifest(manifest: Manifest | null): FileKind | null {
   if (manifest === null) return null;
+  const openX = manifest.openX as { kind?: unknown } | undefined;
+  if (typeof openX?.kind === 'string' && openX.kind.trim() !== '') {
+    return openX.kind.trim();
+  }
   const names = new Set<string>();
   for (const field of ['dependencies', 'devDependencies', 'peerDependencies']) {
     const deps = manifest[field];

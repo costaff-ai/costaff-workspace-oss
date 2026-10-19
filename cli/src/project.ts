@@ -17,7 +17,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { line } from './report.ts';
 import { readEntries } from './entries.ts';
-import { type Entry, SURFACES, type Surface } from './integration.ts';
+import { type Entry, loadProjectSurfaces, type Surface } from './integration.ts';
 import type { FileKind } from './protocol.ts';
 import { ensureBearer, type PushOptions, push } from './push.ts';
 import { tokenFor } from './state.ts';
@@ -27,7 +27,8 @@ export type ProjectItem = { surface: Surface; entry: Entry };
 /** 這個資料夾裡有哪些可以推的東西。空陣列表示它不是多文件專案。 */
 export async function scanProject(root: string): Promise<ProjectItem[]> {
   const items: ProjectItem[] = [];
-  for (const surface of SURFACES) {
+  const surfaces = await loadProjectSurfaces(root);
+  for (const surface of surfaces) {
     for (const entry of await readEntries(root, surface)) items.push({ surface, entry });
   }
   return items;
@@ -65,6 +66,7 @@ export type BuildItem = (opts: {
   surface: Surface;
   id: string;
   outDir: string;
+  token?: string;
   config?: { file: string; body: string };
 }) => Promise<void>;
 
@@ -104,7 +106,7 @@ export async function pushProject(opts: {
 
     if (surface.type === 'files') {
       const staged = path.join(scratch, surface.stage, entry.id);
-      await buildItem({ root, surface, id: entry.id, outDir: staged });
+      await buildItem({ root, surface, id: entry.id, outDir: staged, token });
       await fs.mkdir(dir, { recursive: true });
       for (const f of await fs.readdir(staged)) {
         if (f.startsWith(`${entry.id}.`)) await fs.cp(path.join(staged, f), path.join(dir, f));
@@ -118,10 +120,11 @@ export async function pushProject(opts: {
         surface,
         id: entry.id,
         outDir: dir,
+        token,
         config:
           itemConfig === undefined
             ? undefined
-            : { file: itemConfig.file, body: itemConfig.body(token) },
+            : { file: itemConfig.file, body: itemConfig.body(token, entry.id) },
       });
     }
 
@@ -139,6 +142,8 @@ export async function pushProject(opts: {
       /* 原始碼跟著走，否則推上去的只有產物，沒有人能在上面繼續工作。 */
       sourceRoot: root,
       sourceDir: path.join(surface.dir, entry.id),
+      sourceEntry: entry.entryFile,
+      extraScaffold: surface.sharedPaths,
       token,
       dryRun: opts.dryRun,
       cwd: root,

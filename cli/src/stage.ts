@@ -19,12 +19,14 @@ export async function buildItem({
   surface,
   id,
   outDir,
+  token,
   config,
 }: {
   root: string;
   surface: Surface;
   id: string;
   outDir: string;
+  token?: string;
   config?: { file: string; body: string };
 }): Promise<void> {
   const stage = path.join(root, '.build', 'stage', id);
@@ -36,9 +38,14 @@ export async function buildItem({
   });
 
   // Shared inputs a single item may still reference.
-  for (const shared of ['themes', 'assets']) {
+  const sharedPaths = new Set(['themes', 'assets', ...(surface.sharedPaths ?? [])]);
+  for (const shared of sharedPaths) {
     const from = path.join(root, shared);
-    if (await exists(from)) await fs.cp(from, path.join(stage, shared), { recursive: true });
+    if (await exists(from)) {
+      const dest = path.join(stage, shared);
+      await fs.mkdir(path.dirname(dest), { recursive: true });
+      await fs.cp(from, dest, { recursive: true });
+    }
   }
 
   // The staged project resolves the same packages as the workspace, so a build
@@ -52,8 +59,13 @@ export async function buildItem({
     await fs.writeFile(path.join(stage, config.file), config.body);
   }
 
-  execFileSync('npx', [surface.cli, ...surface.buildArgs(path.resolve(outDir))], {
+  execFileSync('npx', [surface.cli, ...surface.buildArgs(path.resolve(outDir), id, token)], {
     cwd: stage,
+    env: {
+      ...process.env,
+      COSTAFF_EMBED: '1',
+      ...(token ? { COSTAFF_BASE: `/${token}/` } : {}),
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 

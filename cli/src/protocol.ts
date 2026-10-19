@@ -39,7 +39,28 @@ export type DeviceAuthPoll =
   | { status: 'expired' }
   | { status: 'ok'; token: string; expiresAt?: string; account?: string };
 
-export type FileKind = 'document' | 'workbook' | 'deck';
+export type BuiltinFileKind =
+  | 'document'
+  | 'workbook'
+  | 'deck'
+  | 'dashboard'
+  | 'form'
+  | 'map'
+  | 'recording';
+export type FileKind = BuiltinFileKind | (string & {});
+
+export const KINDS = new Set<string>([
+  'document',
+  'workbook',
+  'deck',
+  'dashboard',
+  'form',
+  'map',
+  'recording',
+]);
+
+export const isFileKind = (v: unknown): v is FileKind =>
+  typeof v === 'string' && KINDS.has(v);
 
 /**
  * Where the source that built this file came from, and what it needs to build
