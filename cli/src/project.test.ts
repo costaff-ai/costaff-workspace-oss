@@ -12,6 +12,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { refreshSeconds } from './entries.ts';
 import { type BuildItem, pushProject, scanProject } from './project.ts';
 
 let root: string;
@@ -87,6 +88,34 @@ describe('scanProject', () => {
     });
     expect(items[0]?.surface.kindLabel).toBe('dashboard');
     expect(items[0]?.surface.sharedPaths).toEqual(['charts', 'data']);
+  });
+});
+
+describe('meta.refresh', () => {
+  it('從看板的 meta 讀出更新間隔，引號或數字都行', async () => {
+    for (const [id, meta] of [['live', "refresh: '2m'"], ['umpire', 'refresh: 90']] as const) {
+      const dir = path.join(root, 'dashboards', id);
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(
+        path.join(dir, 'index.tsx'),
+        `export const meta = { title: '${id}', ${meta} };\nexport default () => null;\n`,
+      );
+    }
+    const items = await scanProject(root);
+    expect(items.map((i) => [i.entry.id, i.entry.refresh])).toEqual([
+      ['live', '2m'],
+      ['umpire', '90'],
+    ]);
+  });
+
+  it('換算成秒數；不到一分鐘或寫錯就在建置前擋下', () => {
+    expect(refreshSeconds('2m')).toBe(120);
+    expect(refreshSeconds('90s')).toBe(90);
+    expect(refreshSeconds('90')).toBe(90);
+    expect(refreshSeconds('1h')).toBe(3600);
+    for (const bad of ['30s', '2 minutes', '', '25h', '1.5m']) {
+      expect(() => refreshSeconds(bad)).toThrow(/between 1m and 24h/);
+    }
   });
 });
 

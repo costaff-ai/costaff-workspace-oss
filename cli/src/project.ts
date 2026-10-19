@@ -16,7 +16,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { line } from './report.ts';
-import { readEntries } from './entries.ts';
+import { readEntries, refreshSeconds } from './entries.ts';
 import { type Entry, loadProjectSurfaces, type Surface } from './integration.ts';
 import type { FileKind } from './protocol.ts';
 import { ensureBearer, type PushOptions, push } from './push.ts';
@@ -100,6 +100,8 @@ export async function pushProject(opts: {
 
   for (const { surface, entry } of items) {
     const kind = surface.kindLabel.toLowerCase() as FileKind;
+    // Before the build, so a typo in meta.refresh costs a second, not a build.
+    const refresh = entry.refresh === undefined ? undefined : refreshSeconds(entry.refresh);
     const token = await tokenFor(root, endpoint, kind, entry.id);
     const dir = path.join(dist, entry.id);
     write(`  ${entry.id.padEnd(28)} `);
@@ -137,6 +139,7 @@ export async function pushProject(opts: {
       title: entry.title ?? entry.id,
       subtitle: entry.subtitle ?? entry.description,
       theme: entry.theme,
+      refresh,
       route: surface.itemRoute(entry.id),
       siteDir: dir,
       /* 原始碼跟著走，否則推上去的只有產物，沒有人能在上面繼續工作。 */

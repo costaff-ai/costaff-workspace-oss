@@ -33,6 +33,8 @@ export type Entry = {
   pageSize?: string;
   /** 這份項目宣告它是照哪一份主題做的。open-sheet 沒有這個欄位。 */
   theme?: string;
+  /** meta.refresh 原文，例如 '2m'。只有資料會變的項目（看板）才讀。 */
+  refresh?: string;
   /** 實際找到的入口檔名（如 index.tsx 或 queries.sql），供 source 打包使用。 */
   entryFile?: string;
 };
@@ -193,7 +195,7 @@ export const SURFACES: Surface[] = [
     stage: 'dashboards',
     buildArgs: (out: string) => ['build', '--out', out],
     itemRoute: (id: string) => `/d/${id}`,
-    metaFields: ['title', 'description', 'theme'],
+    metaFields: ['title', 'description', 'theme', 'refresh'],
     entryFiles: ['index.tsx', 'queries.sql'],
     sharedPaths: ['dashboards', 'charts', 'data', 'scripts', 'open-dashboard.config.ts'],
     backLink: 'bar',
@@ -453,7 +455,7 @@ export async function loadProjectSurfaces(root: string): Promise<Surface[]> {
           }
         : undefined,
       itemRoute: (item: string) => tpl(s.itemRoute ?? '/', { id: item }),
-      metaFields: ['title', 'subtitle', 'description', 'pageSize', 'theme'],
+      metaFields: ['title', 'subtitle', 'description', 'pageSize', 'theme', 'refresh'],
       entryFiles: s.entryFiles,
       sharedPaths: s.sharedPaths,
       backLink: 'bar',

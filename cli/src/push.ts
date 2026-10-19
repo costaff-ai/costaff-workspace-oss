@@ -20,6 +20,8 @@ export type PushOptions = {
   subtitle?: string;
   /** open-doc / open-slide 的 meta.theme。 */
   theme?: string;
+  /** meta.refresh, in seconds: how old the data may get while someone reads it. */
+  refresh?: number;
   folder?: string | null;
   token?: string;
   /*
@@ -140,6 +142,16 @@ async function checkBakedBase(siteDir: string, entry: string, token: string): Pr
   );
 }
 
+/** This machine's zone, when it has a name: a rebuild elsewhere should keep this wall clock. */
+function localTimeZone(): { timeZone?: string } {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return typeof zone === 'string' && zone !== '' ? { timeZone: zone } : {};
+  } catch {
+    return {};
+  }
+}
+
 export async function push(opts: PushOptions): Promise<PushResult | null> {
   const write = opts.out ?? (() => {});
   const cwd = opts.cwd ?? process.cwd();
@@ -186,6 +198,8 @@ export async function push(opts: PushOptions): Promise<PushResult | null> {
       title: opts.title,
       subtitle: opts.subtitle,
       theme: opts.theme,
+      ...(opts.refresh === undefined ? {} : { refresh: opts.refresh }),
+      ...localTimeZone(),
       folder: opts.folder,
       route: opts.route,
       entry: opts.entry ?? 'index.html',

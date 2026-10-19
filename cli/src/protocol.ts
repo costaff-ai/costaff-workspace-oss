@@ -101,6 +101,17 @@ export type PushManifest = {
   subtitle?: string;
   /** open-doc / open-slide 的 meta.theme —— 這份檔案是照哪一份主題做的。 */
   theme?: string;
+  /**
+   * Seconds the data may be old while someone is reading it — open-x
+   * `meta.refresh`. A receiver that keeps the source rebuilds it when a reader
+   * finds it older; one that does not ignores this and serves what was pushed.
+   */
+  refresh?: number;
+  /**
+   * The publisher's IANA time zone. A receiver that rebuilds runs the build in
+   * it, so a framework's "built at" reads in the publisher's wall clock.
+   */
+  timeZone?: string;
   folder?: string | null;
   route: string;
   entry: string;
