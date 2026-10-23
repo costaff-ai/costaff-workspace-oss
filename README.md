@@ -190,7 +190,13 @@ Code (or anything reading `.agents/skills/`) picks it up:
 ```bash
 costaff-workspace skills            # writes .claude/skills/ and .agents/skills/
 costaff-workspace skills --dry-run  # say what would change
+costaff-workspace skills --check    # exit 1 if this project's copy is missing or behind
 ```
+
+The skill carries a version (`metadata.version`, the CLI's own version). `whoami`
+and `push` say when the project's copy is behind the one the CLI carries, or
+behind the one the workspace says it is written against — the second means the
+CLI itself needs upgrading. A newer copy is never replaced by an older CLI.
 
 Re-run it after upgrading the CLI; it overwrites, because these files belong to
 the package rather than to your project. Edit a copy under a different name if

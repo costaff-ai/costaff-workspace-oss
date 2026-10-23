@@ -9,9 +9,11 @@
  * 找人的那件事。伺服器那邊是否仍然認得它，要到真的用的時候才知道，這一點說明白。
  */
 
+import { builtinSkillsDir } from './cli-skills.ts';
 import { loadCredential } from './credentials.ts';
 import { DEFAULT_ENDPOINT } from './defaults.ts';
 import { done, line } from './report.ts';
+import { skillNotice, skillStatus } from './skill-version.ts';
 
 const USAGE = `costaff-workspace whoami — what this machine is signed in as
 
@@ -80,5 +82,9 @@ export async function runWhoami(argv: string[]): Promise<void> {
     const as = who.account === null ? '' : ` as ${who.account}`;
     line(`signed in to ${who.endpoint}${as}\n  ${WHERE[who.source]}\n`);
   }
-  done({ command: 'whoami', ...who });
+  /* Still offline: the project's copy against the one this CLI carries. */
+  const skill = await skillStatus(process.cwd(), builtinSkillsDir());
+  const notice = skillNotice(skill);
+  if (notice !== null) line(`\n${notice}`);
+  done({ command: 'whoami', ...who, skill });
 }

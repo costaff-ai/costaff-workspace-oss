@@ -1,4 +1,6 @@
-import { PublishError } from './client.ts';
+import { builtinSkillsDir } from './cli-skills.ts';
+import { discover, PublishError } from './client.ts';
+import { type SkillStatus, skillNotice, skillStatus } from './skill-version.ts';
 import { done, line } from './report.ts';
 import {
   DEFAULT_ENDPOINT,
@@ -178,6 +180,18 @@ export async function runPush(argv: string[]): Promise<void> {
    * 明確給了 --slug 的人是在手動推某一份，照他說的做。
    */
   const root = opts.sourceRoot ?? process.cwd();
+  /*
+   * After the push, not before: a stale skill is worth a line, never worth
+   * stopping a push for. The receiver says which version it is written
+   * against; one that does not say is compared with this CLI's own.
+   */
+  const skillAfter = async (): Promise<SkillStatus> => {
+    const server = await discover(opts.endpoint).then((d) => d.skill?.version ?? null, () => null);
+    const status = await skillStatus(root, builtinSkillsDir(), server);
+    const notice = skillNotice(status);
+    if (notice !== null) line(`\n${notice}`);
+    return status;
+  };
   const scanned = opts.given.slug ? [] : await scanProject(root);
   const items = opts.item === undefined ? scanned : scanned.filter((it) => it.entry.id === opts.item);
   // A single-bundle folder has no items to pick from; --item means nothing there.
@@ -202,13 +216,15 @@ export async function runPush(argv: string[]): Promise<void> {
       buildItem: realBuildItem,
       base: { bearer: opts.bearer, folder: opts.folder },
     });
-    done({ command: 'push', endpoint: opts.endpoint, dryRun: opts.dryRun === true, items: pushed });
+    const skill = await skillAfter();
+    done({ command: 'push', endpoint: opts.endpoint, dryRun: opts.dryRun === true, items: pushed, skill });
     return;
   }
 
   await fill(opts);
   const result = await push(opts);
   if (result !== null) {
+    const skill = await skillAfter();
     done({
       command: 'push',
       endpoint: opts.endpoint,
@@ -224,6 +240,7 @@ export async function runPush(argv: string[]): Promise<void> {
       ],
       updated: result.updated,
       workspace: result.workspace,
+      skill,
     });
   }
 }

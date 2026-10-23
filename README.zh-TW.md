@@ -177,7 +177,12 @@ $ costaff-workspace pull nope --json
 ```bash
 costaff-workspace skills            # 寫入 .claude/skills/ 和 .agents/skills/
 costaff-workspace skills --dry-run  # 只說會改什麼
+costaff-workspace skills --check    # 專案裡的沒裝或落後就以 1 結束
 ```
+
+skill 帶著版本號（`metadata.version`，跟 CLI 同號）。`whoami` 和 `push` 會在專案裡那份
+落後時提醒：落後於這個 CLI 帶的，就跑 `skills`；落後於工作區說它需要的，代表要升級的
+是 CLI 本身。比較新的那份不會被舊的 CLI 蓋掉。
 
 升級 CLI 之後再跑一次。它是覆寫的，因為這些檔案屬於套件而不是你的專案；想自己改就
 另存一個名字。

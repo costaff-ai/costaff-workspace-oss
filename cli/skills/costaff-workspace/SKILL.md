@@ -1,6 +1,8 @@
 ---
 name: costaff-workspace
 description: Publish a built open-doc, open-slide or open-sheet project to CoStaff Workspace and get shareable links back, pull a published file's source onto this machine to keep working on it, or keep a project's themes/ folder in the workspace. Use whenever the user asks to publish, ship, share, upload or "put this online", asks for the link to something they published, wants to continue editing something that lives in the workspace, or mentions costaff-workspace, workspace.costaffs.app, or a token that looks like a workspace address.
+metadata:
+  version: "0.2.0"
 ---
 
 # Publishing to CoStaff Workspace
@@ -117,6 +119,17 @@ Read `error` and say what it says. Two worth recognising:
 - **not signed in** — ask the user to run `login`. Do not retry.
 - **a guess it could not make** — `push` refuses rather than inventing a slug or
   kind. Pass `--slug` or `--kind` once you and the user agree what they are.
+
+## When this skill is out of date
+
+This file has a version (`metadata.version` above). `push --json` and
+`whoami --json` return `skill: {installed, bundled, behind, cliBehind}`, and the
+workspace's MCP server names the version it expects when you connect.
+
+- **`behind` is true** — tell the user, and run `costaff-workspace skills` if they
+  agree. It rewrites this file; reload it before carrying on.
+- **`cliBehind` is true** — the CLI itself is older than the workspace. Suggest
+  `npx costaff-workspace@latest skills`.
 
 ## What not to do
 

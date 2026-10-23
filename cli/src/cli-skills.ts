@@ -14,18 +14,29 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { done, line } from './report.ts';
+import { compareVersions, readSkillVersion } from './skill-version.ts';
 
 const USAGE = `costaff-workspace skills — install the agent skill into this project
 
-  costaff-workspace skills [--dry-run] [--json]
+  costaff-workspace skills [--dry-run] [--check] [--json]
 
-Writes into .claude/skills/ and .agents/skills/, overwriting what is there.
+Writes into .claude/skills/ and .agents/skills/, overwriting what is there —
+unless what is there is a newer version, which is left alone.
+
+  --check    change nothing; exit 1 if this project's skill is missing or behind
 `;
 
 /* 兩個都寫：Claude Code 讀前者，其他工具讀後者，而同一份東西不該要人選邊。 */
 const TARGETS = ['.claude/skills', '.agents/skills'];
 
-export type SkillChange = { name: string; status: 'added' | 'updated' | 'unchanged' };
+export type SkillChange = {
+  name: string;
+  /** newer：專案裡的比這個 CLI 帶的還新（裝過更新的 CLI）。不降版。 */
+  status: 'added' | 'updated' | 'unchanged' | 'newer';
+  /** 專案裡原本的版本；沒裝是 null，沒寫版本是 'unversioned'。 */
+  from: string | null;
+  to: string | null;
+};
 
 /**
  * 套件裡 skills/ 的位置。
@@ -68,12 +79,17 @@ export async function skillChanges(builtin: string, cwd: string): Promise<SkillC
   for (const name of names) {
     /* 以第一個目標判斷。兩個目標寫的是同一份，分開比對只會report出兩次同一件事。 */
     const dst = path.join(cwd, TARGETS[0] ?? '', name);
-    const status = !existsSync(dst)
-      ? 'added'
-      : (await same(path.join(builtin, name), dst))
-        ? 'unchanged'
-        : 'updated';
-    changes.push({ name, status });
+    const to = await readSkillVersion(path.join(builtin, name));
+    const from = existsSync(dst) ? ((await readSkillVersion(dst)) ?? 'unversioned') : null;
+    const status: SkillChange['status'] =
+      from === null
+        ? 'added'
+        : (await same(path.join(builtin, name), dst))
+          ? 'unchanged'
+          : to !== null && from !== 'unversioned' && compareVersions(from, to) > 0
+            ? 'newer'
+            : 'updated';
+    changes.push({ name, status, from, to });
   }
   return changes;
 }
@@ -86,7 +102,7 @@ export async function installSkills(
   const changes = await skillChanges(builtin, cwd);
   if (dryRun) return changes;
   for (const { name, status } of changes) {
-    if (status === 'unchanged') continue;
+    if (status === 'unchanged' || status === 'newer') continue;
     for (const target of TARGETS) {
       const dst = path.join(cwd, target, name);
       await fs.rm(dst, { recursive: true, force: true });
@@ -102,18 +118,25 @@ export async function runSkills(argv: string[]): Promise<void> {
     process.stdout.write(USAGE);
     return;
   }
-  const dryRun = argv.includes('--dry-run');
+  const check = argv.includes('--check');
+  const dryRun = check || argv.includes('--dry-run');
   const builtin = builtinSkillsDir();
   const cwd = process.cwd();
   const changes = await installSkills(builtin, cwd, dryRun);
+  const version = (c: SkillChange) =>
+    c.status === 'unchanged' || c.status === 'newer' ? (c.from ?? '') : `${c.from ?? '—'} → ${c.to ?? '—'}`;
 
   if (changes.length === 0) {
     line('no skills in this package\n');
   } else {
-    for (const { name, status } of changes) {
-      line(`  ${name.padEnd(20)} ${dryRun && status !== 'unchanged' ? `would be ${status}` : status}\n`);
+    for (const c of changes) {
+      const what = dryRun && (c.status === 'added' || c.status === 'updated') ? `would be ${c.status}` : c.status;
+      line(`  ${c.name.padEnd(20)} ${what.padEnd(16)} ${version(c)}\n`);
     }
     if (!dryRun) line(`\nwritten to ${TARGETS.join(' and ')}\n`);
   }
-  done({ command: 'skills', dryRun, targets: TARGETS, skills: changes });
+  const behind = changes.some((c) => c.status === 'added' || c.status === 'updated');
+  done({ command: 'skills', dryRun, check, behind, targets: TARGETS, skills: changes });
+  // --check 是給 agent 和 CI 問「要不要更新」的：落後就以 1 結束。
+  if (check && behind) process.exitCode = 1;
 }

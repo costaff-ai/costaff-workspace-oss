@@ -21,6 +21,8 @@ export type Discovery = {
   /** Optional: where an agent edits files over MCP with the same device token. */
   mcp?: string;
   maxBytes: number;
+  /** Optional: the skill version the receiver is written against. */
+  skill?: { name: string; version: string };
 };
 
 /** RFC 8628 §3.2, minus the fields we do not use. */
